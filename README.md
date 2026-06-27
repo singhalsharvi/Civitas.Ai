@@ -135,7 +135,7 @@ Open `http://localhost:8000` in your browser.
 
 ## Built By
 
-**Sharvi Singhal** — Second Year CS Student  
+**Sharvi Singhal** 
 [GitHub](https://github.com/singhalsharvi)
 
 ---
