@@ -1,4 +1,4 @@
-# Civitas.AI 🏙️
+# Civitas.AI 
 ### AI-powered civic issue reporting platform for Indian cities
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-civitasai--lemon.vercel.app-22D3EE?style=flat-square)](https://civitasai-lemon.vercel.app)
