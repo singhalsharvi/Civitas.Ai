@@ -1,0 +1,3012 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Civitas.Ai</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+/* ── THEME VARIABLES ── */
+[data-theme="dark"]{
+  --bg:#07101f;--s1:#0f1b2d;--s2:#162033;--bdr:#1e2f47;
+  --tx:#F1F5F9;--tx2:#94A3B8;--tx3:#64748B;
+  --card:#0d1929;--shadow:rgba(0,0,0,.4);
+  --acc:#22D3EE;--acc2:#818CF8;--warn:#FBBF24;--dan:#F87171;--ok:#34D399;
+  --chat-bg:#0f1b2d;--chat-user:#162033;--chat-bot:#1e2f47;
+}
+[data-theme="light"]{
+  --bg:#f0f4f8;--s1:#ffffff;--s2:#f8fafc;--bdr:#e2e8f0;
+  --tx:#0f172a;--tx2:#475569;--tx3:#94A3B8;
+  --card:#ffffff;--shadow:rgba(0,0,0,.08);
+  --acc:#0891b2;--acc2:#6366f1;--warn:#d97706;--dan:#dc2626;--ok:#059669;
+  --chat-bg:#f8fafc;--chat-user:#e0f2fe;--chat-bot:#f1f5f9;
+}
+
+body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;min-height:100vh;transition:background .3s,color .3s}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif}
+a{color:var(--acc)}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
+
+/* ── THEME TOGGLE ── */
+.theme-toggle{background:var(--s2);border:1px solid var(--bdr);color:var(--tx2);width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .18s;flex-shrink:0}
+.theme-toggle:hover{border-color:var(--acc);color:var(--acc)}
+
+/* ── LANDING ── */
+.land{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;position:relative;overflow:hidden}
+.land::before{content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:700px;height:700px;background:radial-gradient(ellipse,rgba(34,211,238,.06) 0%,transparent 65%);pointer-events:none}
+.land-top{position:absolute;top:16px;right:20px;display:flex;gap:8px}
+.land-logo{font-size:17px;font-weight:700;display:flex;align-items:center;gap:7px;margin-bottom:44px}
+.logo-dot{width:9px;height:9px;border-radius:50%;background:var(--acc);box-shadow:0 0 8px var(--acc)}
+.land-eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#a78bfa;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);padding:4px 12px;border-radius:20px;margin-bottom:18px;letter-spacing:.04em}
+.edot{width:5px;height:5px;border-radius:50%;background:#a78bfa;animation:gp 2s infinite}
+@keyframes gp{0%,100%{opacity:1}50%{opacity:.3}}
+.land-title{font-size:clamp(32px,5.5vw,60px);font-weight:700;letter-spacing:-2px;line-height:1.05;margin-bottom:12px}
+.land-title em{font-style:normal;background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.land-sub{font-size:15px;color:var(--tx2);max-width:460px;line-height:1.7;margin-bottom:48px}
+.portal-cards{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;max-width:680px;width:100%}
+.pcard{flex:1;min-width:270px;max-width:310px;background:var(--s1);border:1px solid var(--bdr);border-radius:20px;padding:28px 24px;cursor:pointer;transition:all .22s;text-align:left;position:relative;overflow:hidden}
+.pcard::after{content:'';position:absolute;inset:0;opacity:0;transition:opacity .22s}
+.pcard-c::after{background:radial-gradient(ellipse at top left,rgba(34,211,238,.06),transparent 70%)}
+.pcard-g::after{background:radial-gradient(ellipse at top left,rgba(129,140,248,.06),transparent 70%)}
+.pcard:hover{transform:translateY(-5px);box-shadow:0 20px 60px var(--shadow)}
+.pcard:hover::after{opacity:1}
+.pcard-c:hover{border-color:rgba(34,211,238,.35)}
+.pcard-g:hover{border-color:rgba(129,140,248,.35)}
+.pcard-icon{font-size:34px;margin-bottom:14px}
+.pcard-title{font-size:19px;font-weight:700;margin-bottom:5px}
+.pcard-sub{font-size:12px;color:var(--tx2);line-height:1.6;margin-bottom:16px}
+.pcard-feats{display:flex;flex-direction:column;gap:5px;margin-bottom:20px}
+.pcard-feat{font-size:12px;color:var(--tx2);display:flex;align-items:flex-start;gap:6px}
+.pcard-feat::before{content:'✓';color:var(--ok);font-weight:700;flex-shrink:0;margin-top:1px}
+.pcard-btn{width:100%;padding:11px;border-radius:10px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all .18s}
+.pcard-c .pcard-btn{background:var(--acc);color:#07101f}
+.pcard-g .pcard-btn{background:var(--acc2);color:#fff}
+.pcard-btn:hover{opacity:.9;transform:translateY(-1px)}
+
+/* ── AUTH ── */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg)}
+.auth-box{background:var(--s1);border:1px solid var(--bdr);border-radius:18px;padding:30px;width:100%;max-width:390px;box-shadow:0 8px 40px var(--shadow)}
+.auth-title{font-size:21px;font-weight:700;margin-bottom:3px}
+.auth-sub{font-size:12px;color:var(--tx2);margin-bottom:22px}
+.auth-demo{font-size:11px;color:var(--tx2);margin-top:14px;padding:10px 12px;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;line-height:1.75}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:500;height:54px;background:var(--s1);backdrop-filter:blur(16px);border-bottom:1px solid var(--bdr);display:flex;align-items:center;padding:0 16px;gap:12px;box-shadow:0 1px 12px var(--shadow)}
+.nav-logo{font-size:15px;font-weight:700;display:flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0}
+.nav-tabs{display:flex;gap:1px;flex:1;overflow-x:auto}
+.ntab{background:none;border:none;color:var(--tx2);font-size:13px;font-weight:500;padding:6px 12px;border-radius:8px;cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif;white-space:nowrap}
+.ntab:hover{color:var(--tx);background:var(--s2)}
+.ntab.on{color:var(--acc);background:rgba(34,211,238,.09)}
+.ntab-g.on{color:var(--acc2);background:rgba(129,140,248,.09)}
+.nav-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.npbadge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.badge-c{background:rgba(34,211,238,.1);color:var(--acc);border:1px solid rgba(34,211,238,.2)}
+.badge-g{background:rgba(129,140,248,.1);color:var(--acc2);border:1px solid rgba(129,140,248,.2)}
+.gbadge{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#a78bfa;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);padding:3px 9px;border-radius:20px}
+.gbadge-dot{width:5px;height:5px;border-radius:50%;background:#a78bfa;animation:gp 2s infinite}
+
+/* ── LAYOUT ── */
+.page{max-width:1140px;margin:0 auto;padding:70px 16px 120px}
+.ptitle{font-size:20px;font-weight:700;margin-bottom:3px;display:flex;align-items:center;gap:7px}
+.psub{font-size:13px;color:var(--tx2);margin-bottom:20px}
+.shead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.slbl{font-size:15px;font-weight:700;display:flex;align-items:center;gap:7px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);display:inline-block}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;border:none;font-family:'Inter',sans-serif;line-height:1}
+.btn-p{background:var(--acc);color:#07101f}
+.btn-p:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px)}
+.btn-v{background:var(--acc2);color:#fff}
+.btn-v:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-1px)}
+.btn-g{background:var(--s2);color:var(--tx);border:1px solid var(--bdr)}
+.btn-g:hover:not(:disabled){border-color:var(--acc);color:var(--acc)}
+.btn-dan{background:rgba(248,113,113,.1);color:var(--dan);border:1px solid rgba(248,113,113,.2)}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-fw{width:100%;justify-content:center}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* ── FORM ── */
+.fg{margin-bottom:11px}
+.fl{font-size:11px;font-weight:700;color:var(--tx3);margin-bottom:4px;display:block;text-transform:uppercase;letter-spacing:.05em}
+.fi,.fsel,.fta{width:100%;background:var(--s2);border:1px solid var(--bdr);border-radius:9px;padding:9px 12px;color:var(--tx);font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:border-color .18s,background .2s}
+.fi:focus,.fsel:focus,.fta:focus{border-color:var(--acc)}
+.fsel{cursor:pointer}
+.fsel option{background:var(--s1);color:var(--tx)}
+.fta{resize:vertical;min-height:64px;line-height:1.6}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:13px;padding:16px;transition:background .2s}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+
+/* ── CATEGORY GRID ── */
+.catgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.catopt{background:var(--s2);border:2px solid var(--bdr);border-radius:11px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .18s}
+.catopt:hover{border-color:var(--acc);transform:scale(1.02)}
+.catopt.sel{border-color:var(--acc);background:rgba(34,211,238,.07)}
+.cat-icon{font-size:22px;margin-bottom:4px}
+.cat-lbl{font-size:11px;font-weight:600;color:var(--tx2)}
+.catopt.sel .cat-lbl{color:var(--acc)}
+
+/* ── MULTI-IMAGE UPLOAD ── */
+.uzone{border:2px dashed var(--bdr);border-radius:12px;padding:28px 16px;text-align:center;cursor:pointer;position:relative;transition:all .18s}
+.uzone:hover,.uzone.drag{border-color:var(--acc);background:rgba(34,211,238,.03)}
+.uzone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.img-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.img-thumb{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;background:var(--s2)}
+.img-thumb img{width:100%;height:100%;object-fit:cover}
+.img-thumb-rm{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.7);border:none;color:#fff;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:11px;font-weight:700}
+.img-add{border:2px dashed var(--bdr);border-radius:8px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:24px;color:var(--tx3);transition:all .18s;background:var(--s2);position:relative}
+.img-add:hover{border-color:var(--acc);color:var(--acc)}
+.img-add input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+
+/* ── ISSUE CARD ── */
+.icard{background:var(--card);border:1px solid var(--bdr);border-radius:13px;overflow:hidden;transition:border-color .18s,transform .18s,box-shadow .18s,background .2s}
+.icard:hover{border-color:var(--acc);transform:translateY(-3px);box-shadow:0 12px 40px var(--shadow)}
+.icard-imgs{display:flex;gap:2px;height:130px;overflow:hidden}
+.icard-imgs .main-img{flex:2;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden}
+.icard-imgs .main-img img{width:100%;height:100%;object-fit:cover}
+.icard-imgs .side-imgs{flex:1;display:flex;flex-direction:column;gap:2px}
+.icard-imgs .side-img{flex:1;background:var(--bdr);overflow:hidden;position:relative}
+.icard-imgs .side-img img{width:100%;height:100%;object-fit:cover}
+.icard-imgs .side-more{position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700}
+.hp-banner{background:linear-gradient(90deg,rgba(248,113,113,.15),transparent);border-bottom:1px solid rgba(248,113,113,.2);padding:4px 12px;font-size:11px;font-weight:700;color:var(--dan);display:flex;align-items:center;gap:5px}
+.icard-body{padding:12px}
+.imeta{display:flex;align-items:center;gap:5px;margin-bottom:7px;flex-wrap:wrap}
+.bx{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px}
+.bHIGH{color:#FCA5A5;background:rgba(248,113,113,.12)}
+.bMEDIUM{color:#FCD34D;background:rgba(251,191,36,.12)}
+.bLOW{color:#6EE7B7;background:rgba(52,211,153,.12)}
+.bopen{color:#FCA5A5;background:rgba(248,113,113,.1)}
+.bprog{color:#FCD34D;background:rgba(251,191,36,.1)}
+.bres{color:#6EE7B7;background:rgba(52,211,153,.1)}
+.icard-title{font-size:13px;font-weight:600;margin-bottom:4px;line-height:1.4}
+.icard-loc{font-size:11px;color:var(--tx2);margin-bottom:7px}
+.icard-bar{height:3px;background:var(--s2);border-radius:2px;margin-bottom:5px;overflow:hidden}
+.icard-bar-fl{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--acc2),var(--acc))}
+.govtresp{background:rgba(129,140,248,.08);border:1px solid rgba(129,140,248,.18);border-radius:7px;padding:7px 10px;margin-top:6px;font-size:11px;color:var(--tx2);line-height:1.6}
+.govtresp strong{color:var(--acc2)}
+.icard-foot{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--bdr);padding-top:8px;margin-top:6px;gap:6px;flex-wrap:wrap}
+.vbtn{background:var(--s2);border:1px solid var(--bdr);color:var(--tx2);font-size:12px;font-weight:600;padding:4px 10px;border-radius:7px;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:4px;font-family:'Inter',sans-serif}
+.vbtn:hover,.vbtn.on{background:rgba(34,211,238,.1);border-color:var(--acc);color:var(--acc)}
+.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:13px}
+
+/* ── AI BOX ── */
+.aibox{background:linear-gradient(135deg,rgba(129,140,248,.07),rgba(34,211,238,.04));border:1px solid rgba(129,140,248,.2);border-radius:11px;padding:13px}
+.aihdr{font-size:11px;font-weight:700;color:var(--acc2);margin-bottom:10px;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:.07em}
+.airow{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid rgba(129,140,248,.1)}
+.airow:last-child{border-bottom:none}
+.aikey{color:var(--tx2)}
+.aival{font-weight:600;color:var(--tx)}
+.aival.HIGH{color:var(--dan)}
+.aival.MEDIUM{color:var(--warn)}
+.aival.LOW{color:var(--ok)}
+.aidesc{font-size:12px;color:var(--tx2);line-height:1.6;margin-top:8px;padding-top:8px;border-top:1px solid rgba(129,140,248,.1)}
+.aipulse{width:6px;height:6px;border-radius:50%;background:var(--acc2);animation:gp 1.5s infinite;flex-shrink:0}
+.thinking{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--acc2);padding:22px 0;justify-content:center;flex-direction:column}
+.tdots span{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--acc2);animation:bk 1.3s infinite;margin:0 2px}
+.tdots span:nth-child(2){animation-delay:.22s}.tdots span:nth-child(3){animation-delay:.44s}
+@keyframes bk{0%,80%,100%{opacity:.15}40%{opacity:1}}
+
+/* ── DUPLICATE WARNING ── */
+.dup-card{background:var(--s2);border:1px solid var(--bdr);border-radius:9px;padding:11px;margin-bottom:8px;transition:border-color .18s}
+.dup-card:hover{border-color:var(--acc)}
+.dup-title{font-size:13px;font-weight:600;margin-bottom:3px}
+.dup-meta{font-size:11px;color:var(--tx2);margin-bottom:7px}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:700;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadein .2s ease}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.modal{background:var(--s1);border:1px solid var(--bdr);border-radius:17px;padding:20px;max-width:500px;width:100%;max-height:92vh;overflow-y:auto;animation:slidein .25s ease}
+@keyframes slidein{from{transform:translateY(20px);opacity:0}to{transform:none;opacity:1}}
+.mhdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.mtitle{font-size:15px;font-weight:700}
+.mclose{background:var(--s2);border:1px solid var(--bdr);color:var(--tx2);width:28px;height:28px;border-radius:7px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .18s}
+.mclose:hover{border-color:var(--dan);color:var(--dan)}
+.steps{display:flex;gap:4px;margin-bottom:15px}
+.sdot{height:3px;flex:1;border-radius:2px;background:var(--bdr);transition:background .3s}
+.sdot.done{background:var(--acc)}
+
+/* ── MAP ── */
+.leaflet-container{background:var(--s2) !important}
+.mapwrap{background:var(--card);border:1px solid var(--bdr);border-radius:13px;overflow:hidden}
+.maptbar{padding:10px 13px;border-bottom:1px solid var(--bdr);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.fchip{background:var(--s2);border:1px solid var(--bdr);color:var(--tx2);font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif}
+.fchip.on{border-color:var(--acc);color:var(--acc);background:rgba(34,211,238,.08)}
+.mapinfo{padding:9px 13px;border-top:1px solid var(--bdr);font-size:11px;color:var(--tx2);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+
+/* ── CHATBOT ── */
+.chat-fab{position:fixed;bottom:24px;right:24px;z-index:600;width:52px;height:52px;border-radius:50%;background:var(--acc2);color:#fff;border:none;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(129,140,248,.4);transition:all .22s;font-family:'Inter',sans-serif}
+.chat-fab:hover{transform:scale(1.08);box-shadow:0 8px 32px rgba(129,140,248,.5)}
+.chat-fab .notif{position:absolute;top:-2px;right:-2px;width:14px;height:14px;border-radius:50%;background:var(--dan);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg)}
+.chat-window{position:fixed;bottom:86px;right:24px;z-index:601;width:340px;max-height:480px;background:var(--s1);border:1px solid var(--bdr);border-radius:16px;display:flex;flex-direction:column;box-shadow:0 20px 60px var(--shadow);animation:slidein .25s ease}
+.chat-hdr{padding:13px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:9px;flex-shrink:0}
+.chat-hdr-icon{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--acc2),var(--acc));display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.chat-hdr-name{font-size:13px;font-weight:700}
+.chat-hdr-status{font-size:11px;color:var(--ok);display:flex;align-items:center;gap:4px}
+.chat-hdr-status::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--ok);display:inline-block}
+.chat-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:0}
+.cmsg{max-width:82%;font-size:12px;line-height:1.6;padding:8px 11px;border-radius:12px;animation:fadein .2s ease}
+.cmsg.bot{background:var(--chat-bot);color:var(--tx);border-radius:4px 12px 12px 12px;align-self:flex-start}
+.cmsg.user{background:var(--acc2);color:#fff;border-radius:12px 4px 12px 12px;align-self:flex-end}
+.cmsg.typing{background:var(--chat-bot);border-radius:4px 12px 12px 12px;align-self:flex-start;padding:10px 14px}
+.typing-dots span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--tx2);animation:bk 1.3s infinite;margin:0 2px}
+.typing-dots span:nth-child(2){animation-delay:.22s}.typing-dots span:nth-child(3){animation-delay:.44s}
+.chat-suggestions{padding:6px 10px;display:flex;gap:5px;flex-wrap:wrap;border-top:1px solid var(--bdr);flex-shrink:0}
+.chat-sug{background:var(--s2);border:1px solid var(--bdr);color:var(--tx2);font-size:11px;padding:4px 9px;border-radius:20px;cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif;white-space:nowrap}
+.chat-sug:hover{border-color:var(--acc2);color:var(--acc2)}
+.chat-input-row{padding:10px 12px;border-top:1px solid var(--bdr);display:flex;gap:8px;flex-shrink:0}
+.chat-input{flex:1;background:var(--s2);border:1px solid var(--bdr);border-radius:9px;padding:8px 11px;color:var(--tx);font-size:12px;font-family:'Inter',sans-serif;outline:none;transition:border-color .18s}
+.chat-input:focus{border-color:var(--acc2)}
+.chat-send{background:var(--acc2);color:#fff;border:none;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .18s}
+.chat-send:hover{filter:brightness(1.1)}
+
+/* ── GOVT ── */
+.gtable{width:100%;border-collapse:collapse}
+.gtable th{font-size:10px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em;padding:8px 10px;border-bottom:1px solid var(--bdr);text-align:left;background:var(--s2)}
+.gtable td{font-size:12px;padding:10px 10px;border-bottom:1px solid var(--bdr);vertical-align:middle;color:var(--tx)}
+.gtable tr:last-child td{border-bottom:none}
+.gtable tr:hover td{background:var(--s2)}
+.status-sel{background:var(--s2);border:1px solid var(--bdr);border-radius:7px;padding:4px 8px;color:var(--tx);font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;outline:none}
+.stat-card{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:15px;transition:all .18s}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px var(--shadow)}
+.stat-num{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;line-height:1}
+.stat-lbl{font-size:10px;color:var(--tx2);margin-top:3px;text-transform:uppercase;letter-spacing:.05em;font-weight:500}
+
+/* ── HERO ── */
+.hero{padding:88px 16px 40px;text-align:center;position:relative}
+.hglow{position:absolute;top:0;left:50%;transform:translateX(-50%);width:560px;height:340px;background:radial-gradient(ellipse,rgba(34,211,238,.07) 0%,transparent 68%);pointer-events:none}
+.htitle{font-size:clamp(24px,4vw,46px);font-weight:700;line-height:1.1;letter-spacing:-1.5px;margin-bottom:11px}
+.htitle em{font-style:normal;background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hsub{font-size:14px;color:var(--tx2);max-width:440px;margin:0 auto 26px;line-height:1.7}
+.hstats{display:flex;justify-content:center;background:var(--s1);border:1px solid var(--bdr);border-radius:13px;max-width:520px;margin:0 auto;overflow:hidden}
+.stat2{padding:15px 22px;text-align:center;flex:1}
+.stat2:not(:last-child){border-right:1px solid var(--bdr)}
+.snum{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:var(--acc);line-height:1}
+.slbl{font-size:10px;color:var(--tx2);margin-top:3px;text-transform:uppercase;letter-spacing:.05em}
+
+/* ── LOCATION ── */
+.loc-chain{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.chip{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(129,140,248,.1);color:#A5B4FC}
+.chiprow{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+
+/* ── SETTINGS ── */
+.cfgsec{background:var(--s2);border:1px solid var(--bdr);border-radius:11px;padding:14px;margin-bottom:12px}
+.cfgtitle{font-size:13px;font-weight:700;margin-bottom:3px;display:flex;align-items:center;gap:6px}
+.cfgsub{font-size:12px;color:var(--tx2);line-height:1.7;margin-bottom:10px;white-space:pre-line}
+
+/* ── TOAST ── */
+.toaster{position:fixed;bottom:90px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:7px}
+.toast{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:10px 13px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:7px;min-width:230px;max-width:320px;box-shadow:0 8px 32px var(--shadow);animation:tin .3s ease}
+@keyframes tin{from{opacity:0;transform:translateX(36px)}to{opacity:1;transform:translateX(0)}}
+.toast.success{border-color:rgba(52,211,153,.3)}
+.toast.error{border-color:rgba(248,113,113,.3)}
+.toast.info{border-color:rgba(34,211,238,.2)}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:52px 16px;color:var(--tx2)}
+.empty-icon{font-size:40px;margin-bottom:10px}
+
+/* ── TRANSITIONS ── */
+.icard,.card,.stat-card,.pcard,.cfgsec{transition:background .2s,border-color .2s,box-shadow .2s,transform .18s}
+
+@media(max-width:680px){
+  .g2,.g4,.loc-chain{grid-template-columns:1fr}
+  .catgrid{grid-template-columns:repeat(3,1fr)}
+  .chat-window{width:calc(100vw - 32px);right:16px}
+  .gtable{font-size:11px}
+  .gtable th,.gtable td{padding:7px 8px}
+  /* Collapse two-column home to single on mobile */
+  .home-two-col{grid-template-columns:1fr !important}
+}
+
+/* ── AUTH PAGES ── */
+.auth-page{min-height:100vh;display:flex;align-items:stretch;background:var(--bg)}
+.auth-left{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 40px;max-width:520px;width:100%}
+.auth-right{flex:1;background:linear-gradient(135deg,rgba(34,211,238,.08) 0%,rgba(129,140,248,.12) 100%);display:flex;align-items:center;justify-content:center;padding:40px;position:relative;overflow:hidden}
+.auth-right::before{content:'';position:absolute;top:-120px;right:-120px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(34,211,238,.1),transparent 70%)}
+.auth-right::after{content:'';position:absolute;bottom:-80px;left:-80px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(129,140,248,.1),transparent 70%)}
+.auth-brand{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:40px;color:var(--tx)}
+.auth-brand-dot{width:10px;height:10px;border-radius:50%;background:var(--acc);box-shadow:0 0 10px var(--acc)}
+.auth-form-title{font-size:26px;font-weight:700;margin-bottom:6px;font-family:'Space Grotesk',sans-serif}
+.auth-form-sub{font-size:13px;color:var(--tx2);margin-bottom:28px;line-height:1.6}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--tx3);font-size:12px}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--bdr)}
+.google-btn{width:100%;padding:11px;background:var(--s1);border:1.5px solid var(--bdr);border-radius:10px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif;color:var(--tx)}
+.google-btn:hover{border-color:var(--acc);box-shadow:0 2px 12px var(--shadow)}
+.google-icon{width:20px;height:20px;flex-shrink:0}
+.auth-switch{font-size:13px;color:var(--tx2);margin-top:20px;text-align:center}
+.auth-switch button{background:none;border:none;color:var(--acc);font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;padding:0}
+.auth-switch button:hover{text-decoration:underline}
+.auth-feature-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:20px 22px;max-width:360px;width:100%;z-index:1}
+.auth-feature-title{font-size:20px;font-weight:700;margin-bottom:6px;font-family:'Space Grotesk',sans-serif}
+.auth-feature-sub{font-size:13px;color:var(--tx2);line-height:1.65;margin-bottom:18px}
+.auth-feat-row{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.auth-feat-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.auth-feat-label{font-size:13px;font-weight:500}
+.auth-feat-sub{font-size:11px;color:var(--tx2)}
+.input-group{position:relative}
+.input-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none}
+.fi-icon{padding-left:38px}
+.input-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--tx2);font-size:14px;padding:0}
+.loc-detect-btn{width:100%;padding:10px;background:rgba(34,211,238,.08);border:1.5px dashed rgba(34,211,238,.4);border-radius:9px;color:var(--acc);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px}
+.loc-detect-btn:hover{background:rgba(34,211,238,.12)}
+.loc-detect-btn:disabled{opacity:.6;cursor:not-allowed}
+.loc-detected{background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.25);border-radius:9px;padding:10px 13px;font-size:12px;color:var(--ok);display:flex;align-items:center;gap:7px}
+.id-upload-zone{border:2px dashed var(--bdr);border-radius:11px;padding:22px 14px;text-align:center;cursor:pointer;position:relative;transition:all .2s}
+.id-upload-zone:hover,.id-upload-zone.drag{border-color:var(--acc2);background:rgba(129,140,248,.04)}
+.id-upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.id-preview{width:100%;max-height:140px;object-fit:contain;border-radius:8px;margin-bottom:8px}
+.dept-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.25);border-radius:8px;padding:6px 11px;font-size:12px;font-weight:600;color:var(--ok);margin-top:8px}
+.step-nav{display:flex;align-items:center;gap:10px;margin-bottom:24px}
+.step-circle{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;transition:all .2s}
+.step-circle.done{background:var(--acc);color:#07101f}
+.step-circle.active{background:var(--acc);color:#07101f;box-shadow:0 0 0 4px rgba(34,211,238,.2)}
+.step-circle.idle{background:var(--s2);border:1px solid var(--bdr);color:var(--tx2)}
+.step-line{flex:1;height:2px;background:var(--bdr);border-radius:1px;transition:background .3s}
+.step-line.done{background:var(--acc)}
+.profile-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--acc2));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#07101f;flex-shrink:0;cursor:pointer;transition:all .2s}
+.profile-avatar:hover{transform:scale(1.05)}
+.profile-menu{position:absolute;top:52px;right:0;background:var(--s1);border:1px solid var(--bdr);border-radius:12px;padding:8px;min-width:200px;box-shadow:0 8px 32px var(--shadow);z-index:1000;animation:fadein .15s ease}
+.profile-menu-item{display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:8px;font-size:13px;cursor:pointer;transition:background .15s;color:var(--tx);border:none;background:none;width:100%;font-family:'Inter',sans-serif;text-align:left}
+.profile-menu-item:hover{background:var(--s2)}
+.profile-menu-divider{height:1px;background:var(--bdr);margin:5px 0}
+.err-msg{font-size:12px;color:var(--dan);margin-top:-6px;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.success-msg{font-size:12px;color:var(--ok);margin-top:4px;display:flex;align-items:center;gap:5px}
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+.spinner-dark{border-color:rgba(7,16,31,.2);border-top-color:#07101f}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ai-scanning{background:linear-gradient(135deg,rgba(129,140,248,.07),rgba(34,211,238,.04));border:1px solid rgba(129,140,248,.2);border-radius:11px;padding:14px;text-align:center}
+.ai-scanning-title{font-size:13px;font-weight:600;color:var(--acc2);margin-bottom:6px;display:flex;align-items:center;justify-content:center;gap:7px}
+.ai-scanning-sub{font-size:12px;color:var(--tx2)}
+@media(max-width:780px){.auth-right{display:none}.auth-left{max-width:100%;padding:32px 22px}}
+@media(max-width:640px){
+  .nav-tabs{gap:2px}
+  .ntab{font-size:11px;padding:5px 7px}
+  .igrid{grid-template-columns:1fr}
+  .g4{grid-template-columns:1fr 1fr}
+  .gtable thead th:nth-child(2),.gtable tbody td:nth-child(2){display:none}
+  .gtable thead th:nth-child(6),.gtable tbody td:nth-child(6){display:none}
+  .hero{padding:28px 16px 16px}
+  .htitle{font-size:24px}
+  nav{flex-wrap:wrap;padding:8px 12px;gap:6px}
+  .nav-right{gap:5px}
+  .modal{margin:8px;max-height:92vh}
+  .loc-chain{grid-template-columns:1fr}
+}
+
+</style>
+</head>
+<body>
+<a href="#root" style="position:absolute;left:-9999px;top:0;z-index:9999;padding:8px 16px;background:var(--acc);color:#07101f;font-weight:700;border-radius:0 0 8px 0;text-decoration:none;font-family:'Inter',sans-serif" onfocus="this.style.left='0'" onblur="this.style.left='-9999px'">Skip to content</a>
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+// ── ALL APP CODE (plain JS + React.createElement, NO JSX, NO BABEL) ──────────
+const {useState,useEffect,useRef,useCallback,useMemo} = React;
+
+// ── ERROR BOUNDARY ────────────────────────────────────────────
+class ErrorBoundary extends React.Component {
+  constructor(props){super(props);this.state={err:null};}
+  static getDerivedStateFromError(e){return{err:e};}
+  componentDidCatch(e,info){console.error("App error:",e,info);}
+  render(){
+    if(this.state.err)return React.createElement("div",{style:{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"40px",textAlign:"center",background:"var(--bg)",color:"var(--tx)"}},
+      React.createElement("div",{style:{fontSize:"48px",marginBottom:"16px"}},"⚠️"),
+      React.createElement("div",{style:{fontSize:"20px",fontWeight:700,marginBottom:"8px",fontFamily:"'Space Grotesk',sans-serif"}},"Something went wrong"),
+      React.createElement("div",{style:{fontSize:"13px",color:"var(--tx2)",marginBottom:"24px",maxWidth:"400px",lineHeight:1.6}},this.state.err.message),
+      React.createElement("button",{style:{padding:"10px 22px",borderRadius:"9px",background:"var(--acc)",color:"#07101f",border:"none",fontWeight:700,cursor:"pointer",fontSize:"13px"},onClick:()=>window.location.reload()},"Reload App")
+    );
+    return this.props.children;
+  }
+}
+
+const CATS = [
+  {id:"garbage",   label:"Garbage",      icon:"🗑️", color:"#6EE7B7", dept:"Municipal Sanitation"},
+  {id:"water",     label:"Water Leak",   icon:"💧", color:"#93C5FD", dept:"Water Supply Board"},
+  {id:"pothole",   label:"Pothole",      icon:"🕳️", color:"#FCA5A5", dept:"Roads Department"},
+  {id:"streetlight",label:"Streetlight", icon:"💡", color:"#FCD34D", dept:"Electricity Board"},
+  {id:"road",      label:"Road Damage",  icon:"🚧", color:"#C4B5FD", dept:"Roads Department"},
+  {id:"sewage",    label:"Sewage",       icon:"🚽", color:"#FDBA74", dept:"Water Supply Board"},
+  {id:"tree",      label:"Fallen Tree",  icon:"🌳", color:"#86EFAC", dept:"Horticulture Dept"},
+  {id:"encroach",  label:"Encroachment", icon:"⚠️", color:"#F9A8D4", dept:"Municipal Corporation"},
+  {id:"other",     label:"Other",        icon:"🔧", color:"#CBD5E1", dept:"Municipal Corporation"},
+];
+const CMAP = Object.fromEntries(CATS.map(c=>[c.id,c]));
+
+const LOC_TREE = {
+  "Delhi":{
+    "Central Delhi":["Chandni Chowk","Paharganj","Karol Bagh","Connaught Place","Darya Ganj"],
+    "South Delhi":["Lajpat Nagar","Saket","Hauz Khas","Greater Kailash","Nehru Place","Malviya Nagar"],
+    "North Delhi":["Civil Lines","Model Town","Rohini Sector 1-5","Rohini Sector 6-22","Pitampura"],
+    "East Delhi":["Preet Vihar","Laxmi Nagar","Mayur Vihar Phase 1","Mayur Vihar Phase 2","Vishwas Nagar"],
+    "West Delhi":["Dwarka Sector 1-10","Dwarka Sector 11-23","Janakpuri","Rajouri Garden","Palam"],
+    "South West Delhi":["Vasant Kunj","Vasant Vihar","Mehrauli","Mahipalpur"],
+    "New Delhi":["Lodhi Road","Safdarjung","Khan Market","Chanakyapuri","RK Puram"],
+    "Shahdara":["Dilshad Garden","Vivek Vihar","Patparganj","Krishna Nagar"],
+    "North East Delhi":["Seelampur","Jaffrabad","Mustafabad","Bhajanpura"],
+  },
+  "Karnataka":{
+    "Bengaluru Urban":["Koramangala","Indiranagar","Whitefield","Jayanagar","JP Nagar","HSR Layout","Bellandur","Marathahalli","Hebbal","Bannerghatta Road"],
+    "Bengaluru Rural":["Devanahalli","Doddaballapur","Hoskote"],
+    "Mysuru":["Nazarbad","Kuvempunagar","Vijayanagar Mysuru","Saraswathipuram"],
+    "Hubballi-Dharwad":["Deshpande Nagar","Vidyanagar Hubli","Gokul Road"],
+    "Mangaluru":["Hampankatta","Kadri","Bejai","Kankanady"],
+  },
+  "Maharashtra":{
+    "Mumbai City":["Colaba","Fort","Churchgate","Dadar","Parel","Worli","Lower Parel"],
+    "Mumbai Suburban":["Bandra","Andheri East","Andheri West","Borivali","Malad","Kandivali","Goregaon","Santacruz","Kurla","Ghatkopar","Mulund"],
+    "Thane":["Thane West","Thane East","Kopri","Wagle Estate","Majiwada"],
+    "Pune":["Shivajinagar","Kothrud","Hadapsar","Viman Nagar","Wakad","Hinjewadi","Aundh","Baner"],
+    "Nagpur":["Dharampeth","Sadar","Sitabuldi","Civil Lines Nagpur"],
+  },
+  "Tamil Nadu":{
+    "Chennai":["Adyar","Anna Nagar","Mylapore","Velachery","Tambaram","T Nagar","Egmore","Royapettah","Nungambakkam"],
+    "Coimbatore":["RS Puram","Gandhipuram","Peelamedu","Saibaba Colony"],
+    "Madurai":["Anna Nagar Madurai","KK Nagar Madurai","Simmakkal","Tallakulam"],
+    "Salem":["Fairlands","Hasthampatti","Suramangalam"],
+  },
+  "Telangana":{
+    "Hyderabad":["Banjara Hills","Jubilee Hills","Hitech City","Gachibowli","Madhapur","Kondapur","Kukatpally","Ameerpet","Secunderabad","Begumpet"],
+    "Rangareddy":["Shamshabad","Rajendranagar","Serilingampally","LB Nagar"],
+    "Medchal-Malkajgiri":["Kompally","Alwal","Malkajgiri","Uppal"],
+  },
+  "West Bengal":{
+    "Kolkata":["Park Street","Salt Lake Sector 1","Salt Lake Sector 5","New Town","Howrah","Dum Dum","Behala","Tollygunge","Gariahat","Ballygunge"],
+    "North 24 Parganas":["Barasat","Barrackpore","Madhyamgram","Rajarhat"],
+    "Howrah":["Shibpur","Golabari","Bally","Liluah"],
+  },
+  "Rajasthan":{
+    "Jaipur":["Malviya Nagar Jaipur","Vaishali Nagar","Mansarovar","C-Scheme","Sanganer","Jagatpura"],
+    "Jodhpur":["Ratanada","Shastri Nagar Jodhpur","Sardarpura"],
+    "Udaipur":["Suraj Pole","Hiran Magri","Bhuwana"],
+  },
+  "Gujarat":{
+    "Ahmedabad":["Navrangpura","Satellite","Bopal","Prahlad Nagar","Maninagar","Ghatlodia","Chandkheda","Vastrapur","Thaltej"],
+    "Surat":["Vesu","Adajan","Piplod","Citylight","Katargam"],
+    "Vadodara":["Alkapuri","Fatehganj","Gorwa","Harni"],
+  },
+  "Uttar Pradesh":{
+    "Lucknow":["Hazratganj","Gomti Nagar","Aliganj","Indira Nagar Lucknow","Chinhat"],
+    "Noida":["Sector 18","Sector 62","Sector 137","Sector 50","Noida Extension"],
+    "Agra":["Tajganj","Shahganj","Kamla Nagar Agra","Sanjay Place"],
+    "Kanpur":["Civil Lines Kanpur","Kidwai Nagar","Govind Nagar"],
+  },
+  "Punjab":{
+    "Chandigarh":["Sector 17","Sector 22","Sector 34","Sector 35","Sector 43","Manimajra"],
+    "Ludhiana":["Model Town Ludhiana","Sarabha Nagar","BRS Nagar"],
+    "Amritsar":["Golden Temple Area","Lawrence Road","Ranjit Avenue"],
+  },
+};
+
+const STATES = Object.keys(LOC_TREE);
+
+const STATE_COORDS = {
+  "Delhi":{lat:28.7041,lng:77.1025},
+  "Karnataka":{lat:12.9716,lng:77.5946},
+  "Maharashtra":{lat:19.0760,lng:72.8777},
+  "Tamil Nadu":{lat:13.0827,lng:80.2707},
+  "Telangana":{lat:17.3850,lng:78.4867},
+  "West Bengal":{lat:22.5726,lng:88.3639},
+  "Rajasthan":{lat:26.9124,lng:75.7873},
+  "Gujarat":{lat:23.0225,lng:72.5714},
+  "Uttar Pradesh":{lat:26.8467,lng:80.9462},
+  "Punjab":{lat:30.7333,lng:76.7794},
+};
+
+// ── DEPT ETA (days) ─────────────────────────────────────────
+const DEPT_ETA_DAYS = {
+  "Roads Department":      7,
+  "Electricity Board":     3,
+  "Water Supply Board":    2,
+  "Municipal Sanitation":  3,
+  "Horticulture Dept":     5,
+  "Municipal Corporation": 7,
+  "Revenue Department":   14,
+  "Health Department":     5,
+  "Other Government":      7,
+};
+
+// ── GOVT ACCOUNTS ─────────────────────────────────────────────
+// Each officer sees ONLY their dept. Head officers see escalated issues from their sub-dept.
+const GOVT_ACCOUNTS = {
+  // Delhi
+  "roads@delhi.gov.in":     {pass:"roads2024",   name:"Rajesh Kumar",    dept:"Roads Department",      state:"Delhi",       isHead:false},
+  "roads.head@delhi.gov.in":{pass:"head2024",    name:"IAS Priya Singh",  dept:"Roads Department",      state:"Delhi",       isHead:true},
+  "water@delhi.gov.in":     {pass:"water2024",   name:"Amit Sharma",      dept:"Water Supply Board",    state:"Delhi",       isHead:false},
+  "water.head@delhi.gov.in":{pass:"head2024",    name:"IAS Neeta Gupta",  dept:"Water Supply Board",    state:"Delhi",       isHead:true},
+  "elec@delhi.gov.in":      {pass:"elec2024",    name:"Suresh Yadav",     dept:"Electricity Board",     state:"Delhi",       isHead:false},
+  "sanit@delhi.gov.in":     {pass:"sanit2024",   name:"Deepak Mishra",    dept:"Municipal Sanitation",  state:"Delhi",       isHead:false},
+  // Karnataka
+  "roads@bbmp.gov.in":      {pass:"roads2024",   name:"Kiran Rao",        dept:"Roads Department",      state:"Karnataka",   isHead:false},
+  "water@bwssb.gov.in":     {pass:"water2024",   name:"Sunita Patil",     dept:"Water Supply Board",    state:"Karnataka",   isHead:false},
+  "elec@bescom.gov.in":     {pass:"elec2024",    name:"Ramesh Gowda",     dept:"Electricity Board",     state:"Karnataka",   isHead:false},
+  "mcd@bbmp.gov.in":        {pass:"mcd2024",     name:"BBMP Officer",     dept:"Municipal Corporation", state:"Karnataka",   isHead:false},
+  // Maharashtra
+  "roads@mcgm.gov.in":      {pass:"roads2024",   name:"Vijay Patil",      dept:"Roads Department",      state:"Maharashtra", isHead:false},
+  "water@mcgm.gov.in":      {pass:"water2024",   name:"Anita Desai",      dept:"Water Supply Board",    state:"Maharashtra", isHead:false},
+  "muni@mcgm.gov.in":       {pass:"muni2024",    name:"MCGM Officer",     dept:"Municipal Corporation", state:"Maharashtra", isHead:false},
+};
+
+// Demo accounts to show in login
+const DEMO_GOVT = [
+  {email:"roads@delhi.gov.in",    password:"roads2024", ...GOVT_ACCOUNTS["roads@delhi.gov.in"]},
+  {email:"roads.head@delhi.gov.in",password:"head2024", ...GOVT_ACCOUNTS["roads.head@delhi.gov.in"]},
+  {email:"water@delhi.gov.in",    password:"water2024", ...GOVT_ACCOUNTS["water@delhi.gov.in"]},
+  {email:"elec@delhi.gov.in",     password:"elec2024",  ...GOVT_ACCOUNTS["elec@delhi.gov.in"]},
+  {email:"sanit@delhi.gov.in",    password:"sanit2024", ...GOVT_ACCOUNTS["sanit@delhi.gov.in"]},
+  {email:"roads@bbmp.gov.in",     password:"roads2024", ...GOVT_ACCOUNTS["roads@bbmp.gov.in"]},
+  {email:"water@bwssb.gov.in",    password:"water2024", ...GOVT_ACCOUNTS["water@bwssb.gov.in"]},
+];
+
+const LS_KEY = "civitas_v4";
+const LS_STATE_KEY = "civitas_userstate";
+
+function loadIssues(){ try{ const r=localStorage.getItem(LS_KEY); return r?JSON.parse(r):null; }catch(e){return null;} }
+function saveIssues(issues){ try{ localStorage.setItem(LS_KEY,JSON.stringify(issues)); }catch(e){} }
+function loadUserState(){ try{ const r=localStorage.getItem(LS_STATE_KEY); return r?JSON.parse(r):null; }catch(e){return null;} }
+function saveUserState(st){ try{ localStorage.setItem(LS_STATE_KEY,JSON.stringify(st)); }catch(e){} }
+
+// ── SEED DATA ─────────────────────────────────────────────────
+function makeEta(dept, daysAgo){
+  const etaDays = DEPT_ETA_DAYS[dept] || 7;
+  const reported = new Date(Date.now() - daysAgo*24*3600*1000);
+  const etaDate = new Date(reported.getTime() + etaDays*24*3600*1000);
+  const isOverdue = etaDate < new Date();
+  return {
+    reportedTs: reported.getTime(),
+    etaTs: etaDate.getTime(),
+    etaDays,
+    escalated: isOverdue,
+    etaLabel: etaDate.toISOString().split("T")[0],
+  };
+}
+const SEED = [
+  {id:"s1",title:"Large pothole on Ring Road",location:"South Delhi › Lajpat Nagar",area:"Lajpat Nagar",district:"South Delhi",state:"Delhi",category:"pothole",severity:"HIGH",status:"open",votes:47,lat:28.569,lng:77.243,desc:"40cm wide pothole causing vehicle damage and near-accidents.",date:"2025-06-10",aiScore:92,dept:"Roads Department",imageUrls:[],govtResponse:null,resolvedAt:null,reportedBy:null,...makeEta("Roads Department",16)},
+  {id:"s2",title:"Water pipe burst on MG Road",location:"South Delhi › Lajpat Nagar",area:"Lajpat Nagar",district:"South Delhi",state:"Delhi",category:"water",severity:"HIGH",status:"progress",votes:31,lat:28.570,lng:77.244,desc:"Major pipe burst causing waterlogging and road damage.",date:"2025-06-19",aiScore:88,dept:"Water Supply Board",imageUrls:[],govtResponse:"Team dispatched. Repair ongoing.",resolvedAt:null,reportedBy:null,...makeEta("Water Supply Board",7)},
+  {id:"s3",title:"Garbage dump blocking footpath",location:"South Delhi › Hauz Khas",area:"Hauz Khas",district:"South Delhi",state:"Delhi",category:"garbage",severity:"MEDIUM",status:"open",votes:26,lat:28.548,lng:77.204,desc:"Bins overflowing for 5 days, blocking pedestrian access.",date:"2025-06-21",aiScore:79,dept:"Municipal Sanitation",imageUrls:[],govtResponse:null,resolvedAt:null,reportedBy:null,...makeEta("Municipal Sanitation",5)},
+  {id:"s4",title:"Open manhole near bus stop",location:"Central Delhi › Paharganj",area:"Paharganj",district:"Central Delhi",state:"Delhi",category:"sewage",severity:"HIGH",status:"open",votes:62,lat:28.643,lng:77.212,desc:"Manhole cover missing. School children walk this route daily.",date:"2025-06-05",aiScore:97,dept:"Water Supply Board",imageUrls:[],govtResponse:null,resolvedAt:null,reportedBy:null,...makeEta("Water Supply Board",21)},
+  {id:"s5",title:"Streetlights out on Outer Ring",location:"North Delhi › Rohini Sector 1-5",area:"Rohini Sector 1-5",district:"North Delhi",state:"Delhi",category:"streetlight",severity:"MEDIUM",status:"open",votes:19,lat:28.743,lng:77.113,desc:"400m stretch dark since last week, unsafe at night.",date:"2025-06-18",aiScore:71,dept:"Electricity Board",imageUrls:[],govtResponse:null,resolvedAt:null,reportedBy:null,...makeEta("Electricity Board",8)},
+  {id:"s6",title:"Water pipe burst on MG Road",location:"Bengaluru Urban › Indiranagar",area:"Indiranagar",district:"Bengaluru Urban",state:"Karnataka",category:"water",severity:"HIGH",status:"progress",votes:31,lat:12.978,lng:77.641,desc:"Major pipe burst causing waterlogging.",date:"2025-06-19",aiScore:88,dept:"Water Supply Board",imageUrls:[],govtResponse:"Team dispatched. Repair scheduled.",resolvedAt:null,reportedBy:null,...makeEta("Water Supply Board",7)},
+  {id:"s7",title:"Streetlights out on Park Ave",location:"Bengaluru Urban › HSR Layout",area:"HSR Layout",district:"Bengaluru Urban",state:"Karnataka",category:"streetlight",severity:"MEDIUM",status:"open",votes:19,lat:12.912,lng:77.637,desc:"400m stretch dark since last week.",date:"2025-06-18",aiScore:71,dept:"Electricity Board",imageUrls:[],govtResponse:null,resolvedAt:null,reportedBy:null,...makeEta("Electricity Board",8)},
+  {id:"s8",title:"Road crack fixed",location:"Bengaluru Urban › Whitefield",area:"Whitefield",district:"Bengaluru Urban",state:"Karnataka",category:"road",severity:"MEDIUM",status:"resolved",votes:14,lat:12.970,lng:77.750,desc:"Deep road crack appeared after monsoon.",date:"2025-06-15",aiScore:65,dept:"Roads Department",imageUrls:[],govtResponse:"Completed on 22nd June.",resolvedAt:"2025-06-22",reportedBy:null,...makeEta("Roads Department",11)},
+];
+
+// ── FIREBASE ──────────────────────────────────────────────────
+let _db=null,_storage=null,_fbReady=false;
+async function initFB(cfg){
+  try{
+    const {initializeApp,getApps}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+    const {getFirestore,collection,addDoc,getDocs,doc,updateDoc,query,orderBy}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const {getStorage,ref,uploadString,getDownloadURL}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js");
+    const apps=getApps(); const app=apps.length?apps[0]:initializeApp(cfg);
+    _db=getFirestore(app); _storage=getStorage(app);
+    window._fb={collection,addDoc,getDocs,doc,updateDoc,query,orderBy,ref,uploadString,getDownloadURL};
+    _fbReady=true; return true;
+  }catch(e){console.error(e);return false;}
+}
+async function fbSave(issue,images){
+  if(!_fbReady||!window._fb)return null;
+  const {collection,addDoc,ref,uploadString,getDownloadURL}=window._fb;
+  const imageUrls=[];
+  for(const b64 of (images||[])){
+    try{
+      const sr=ref(_storage,`issues/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`);
+      await uploadString(sr,b64,"base64",{contentType:"image/jpeg"});
+      imageUrls.push(await getDownloadURL(sr));
+    }catch(e){console.warn(e);}
+  }
+  const payload={...issue,imageUrls,createdAt:new Date().toISOString()};
+  delete payload.id;
+  const ref2=await addDoc(window._fb.collection(_db,"civitas_issues"),payload);
+  return{id:ref2.id,...payload};
+}
+async function fbLoadAll(){
+  if(!_fbReady||!window._fb)return null;
+  const {collection,getDocs,query,orderBy}=window._fb;
+  const q=query(collection(_db,"civitas_issues"),orderBy("createdAt","desc"));
+  const snap=await getDocs(q);
+  return snap.docs.map(d=>({id:d.id,...d.data()}));
+}
+async function fbUpdate(id,fields){
+  if(!_fbReady||!window._fb)return;
+  try{await window._fb.updateDoc(window._fb.doc(_db,"civitas_issues",id),{...fields,updatedAt:new Date().toISOString()});}catch(e){}
+}
+
+// ── GEMINI ────────────────────────────────────────────────────
+async function runGemini(b64,userCat,desc,apiKey){
+  if(!apiKey||!b64){
+    await new Promise(r=>setTimeout(r,1200));
+    const c=CMAP[userCat]||CATS[0];
+    return{category:userCat,severity:"HIGH",dept:c.dept,score:91,eta:"5–8 days",
+      desc:`Significant ${c.label.toLowerCase()} issue detected. ${c.dept} should address this within 48 hours.`,
+      tags:[c.label,"Urgent","Public safety"],raw:"Demo mode"};
+  }
+  const prompt=`You are a civic issue AI for Indian cities. Analyze this photo carefully.
+User selected: "${userCat}" (${CMAP[userCat]?.label||userCat})
+${desc?`User description: "${desc}"`:""}
+
+What you see in image → category:
+- Water gushing/burst pipe/flooding → "water"
+- Garbage/trash/overflowing bins → "garbage"
+- Hole/cave-in in road → "pothole"
+- Broken/unlit street lamp → "streetlight"
+- Cracked/broken road/pavement → "road"
+- Open manhole/sewage overflow → "sewage"
+- Fallen/uprooted tree → "tree"
+- Illegal construction/encroachment → "encroach"
+- Other → "other"
+
+HIGH=immediate safety risk, MEDIUM=significant inconvenience, LOW=minor
+Return ONLY JSON: {"category":"<id>","severity":"HIGH|MEDIUM|LOW","dept":"<dept>","score":<0-100>,"eta":"<days>","desc":"<2 sentences>","tags":["t1","t2","t3"]}`;
+  try{
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {method:"POST",headers:{"Content-Type":"application/json"},
+       body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:"image/jpeg",data:b64}},{text:prompt}]}],
+       generationConfig:{temperature:0.05,topP:0.8}})});
+    const d=await r.json();
+    if(d.error)throw new Error(d.error.message);
+    const raw=d?.candidates?.[0]?.content?.parts?.[0]?.text||"{}";
+    const p=JSON.parse(raw.replace(/```json|```/g,"").trim());
+    if(!p.dept)p.dept=CMAP[p.category]?.dept||"Municipal Corporation";
+    p.raw=raw; return p;
+  }catch(e){
+    const c=CMAP[userCat]||CATS[0];
+    return{category:userCat,severity:"MEDIUM",dept:c.dept,score:60,eta:"7-10 days",desc:"Analysis error. Manual review needed.",tags:[],raw:e.message};
+  }
+}
+
+// ── CHATBOT LOGIC (Gemini-powered) ───────────────────────────
+async function chatWithGemini(userMsg, issues, userState, apiKey){
+  const areaIssues = issues.filter(i=>!userState||i.state===userState.state);
+  const summary = areaIssues.slice(0,10).map(i=>`[${i.severity}] ${i.title} (${i.status}, ${i.votes} votes, ${i.location})`).join('\n');
+  const context = `You are CivitasBot, a helpful AI assistant for the Civitas.Ai platform — a civic issue reporting app for Indian cities.
+Current user's area: ${userState?`${userState.state} › ${userState.district||''} › ${userState.area||''}`:'Not set'}
+Recent issues in user's area (${areaIssues.length} total):
+${summary||'No issues yet in this area.'}
+
+You help citizens:
+- Understand how to report issues (4 steps: Category → Location → Photo → AI Analysis)
+- Find out status of issues in their area
+- Understand what government departments handle what
+- Answer questions about the platform
+- Give civic advice
+
+Be concise, friendly, and helpful. Use emojis naturally. If asked about specific issues, reference the data above.`;
+  if(!apiKey){
+    await new Promise(r=>setTimeout(r,600));
+    const msg=userMsg.toLowerCase();
+    if(msg.includes("report")||msg.includes("how"))return"To report an issue: tap **+ Report** button → pick category → select your location → upload photos → Gemini AI analyzes it automatically! 📸";
+    if(msg.includes("status")||msg.includes("issue"))return`There are **${areaIssues.length}** issues in your area. ${areaIssues.filter(i=>i.status==="open").length} open, ${areaIssues.filter(i=>i.status==="resolved").length} resolved. 📊`;
+    if(msg.includes("pothole")||msg.includes("road"))return"Road issues are handled by the **Roads Department**. After reporting, they typically respond within 5-8 days. High-vote issues get priority! 🚧";
+    if(msg.includes("water")||msg.includes("pipe"))return"Water leaks are handled by the **Water Supply Board**. These are HIGH priority — usually addressed within 24-48 hours if reported correctly. 💧";
+    if(msg.includes("garbage")||msg.includes("trash"))return"Garbage issues go to **Municipal Sanitation**. Tip: if 3+ people report the same area, it gets escalated automatically! 🗑️";
+    if(msg.includes("hello")||msg.includes("hi")||msg.includes("hey"))return"Hey there! 👋 I'm CivitasBot. I can help you report issues, check status of problems in your area, or answer questions about Civitas.Ai. What's on your mind?";
+    return"I'm here to help! You can ask me about how to report issues, check what's happening in your area, or get info on any civic problem. What would you like to know? 🏙️";
+  }
+  try{
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {method:"POST",headers:{"Content-Type":"application/json"},
+       body:JSON.stringify({contents:[{parts:[{text:context+"\n\nUser: "+userMsg+"\nCivitasBot:"}]}],
+       generationConfig:{temperature:0.7,maxOutputTokens:200}})});
+    const d=await r.json();
+    if(d.error)throw new Error(d.error.message);
+    return d?.candidates?.[0]?.content?.parts?.[0]?.text||"Sorry, I couldn't process that. Try again!";
+  }catch(e){return"I'm having trouble connecting right now. Try again in a moment! 🔄";}
+}
+
+// ── TOAST ─────────────────────────────────────────────────────
+let _tid=0;
+function useToast(){
+  const [ts,setTs]=useState([]);
+  const add=useCallback((msg,type="info")=>{const id=++_tid;setTs(t=>[...t,{id,msg,type}]);setTimeout(()=>setTs(t=>t.filter(x=>x.id!==id)),4000);},[]);
+  return{ts,add};
+}
+function Toaster({ts}){
+  const I={success:"✅",error:"❌",info:"ℹ️"};
+  return React.createElement("div",{className:"toaster","aria-live":"polite","aria-atomic":"false"},ts.map(t=>
+    React.createElement("div",{key:t.id,className:`toast ${t.type}`,role:"status"},React.createElement("span",{"aria-hidden":"true"},I[t.type]),React.createElement("span",null,t.msg))
+  ));
+}
+
+// ── THEME HOOK ────────────────────────────────────────────────
+function useTheme(){
+  const [theme,setTheme]=useState(()=>localStorage.getItem("civitas_theme")||"dark");
+  useEffect(()=>{document.documentElement.setAttribute("data-theme",theme);localStorage.setItem("civitas_theme",theme);},[theme]);
+  const toggle=()=>setTheme(t=>t==="dark"?"light":"dark");
+  return{theme,toggle};
+}
+
+// ── CHATBOT COMPONENT ─────────────────────────────────────────
+function ChatBot({issues,userState,apiKey}){
+  const [open,setOpen]=useState(false);
+  const [msgs,setMsgs]=useState([{role:"bot",text:"Hey! 👋 I'm **CivitasBot**. Ask me anything about issues in your area, how to report problems, or what's happening near you!"}]);
+  const [input,setInput]=useState("");
+  const [typing,setTyping]=useState(false);
+  const [hasNew,setHasNew]=useState(true);
+  const msgsRef=useRef(null);
+
+  const openCount=issues.filter(i=>i.status==="open").length;
+  const highCount=issues.filter(i=>i.severity==="HIGH"&&i.status!=="resolved").length;
+  const SUGS=highCount>0
+    ?["Show urgent issues","How do I report an issue?","Which dept handles potholes?","What is the most voted issue?"]
+    :openCount>0
+    ?["What issues are open nearby?","How does AI analysis work?","Which dept handles garbage?","How do I upvote an issue?"]
+    :["How do I report an issue?","What categories can I report?","How does Gemini AI work?","Who sees my report?"];
+
+  useEffect(()=>{if(msgsRef.current)msgsRef.current.scrollTop=msgsRef.current.scrollHeight;},[msgs,typing]);
+
+  async function send(text){
+    const msg=text||input.trim(); if(!msg)return;
+    setInput(""); setHasNew(false);
+    setMsgs(m=>[...m,{role:"user",text:msg}]);
+    setTyping(true);
+    const reply=await chatWithGemini(msg,issues,userState,apiKey);
+    setTyping(false);
+    setMsgs(m=>[...m,{role:"bot",text:reply}]);
+  }
+
+  function renderText(t){
+    return t.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>");
+  }
+
+  return React.createElement(React.Fragment,null,
+    open&&React.createElement("div",{className:"chat-window"},
+      React.createElement("div",{className:"chat-hdr"},
+        React.createElement("div",{className:"chat-hdr-icon"},"🤖"),
+        React.createElement("div",{style:{flex:1}},
+          React.createElement("div",{className:"chat-hdr-name"},"CivitasBot"),
+          React.createElement("div",{className:"chat-hdr-status"},"Online · Gemini AI")
+        ),
+        React.createElement("button",{className:"mclose",onClick:()=>setOpen(false)},"✕")
+      ),
+      React.createElement("div",{className:"chat-msgs",ref:msgsRef},
+        msgs.map((m,i)=>React.createElement("div",{key:i,className:`cmsg ${m.role}`,dangerouslySetInnerHTML:{__html:renderText(m.text)}})),
+        typing&&React.createElement("div",{className:"cmsg typing"},React.createElement("div",{className:"typing-dots"},React.createElement("span"),React.createElement("span"),React.createElement("span")))
+      ),
+      React.createElement("div",{className:"chat-suggestions"},
+        SUGS.map((s,i)=>React.createElement("button",{key:i,className:"chat-sug",onClick:()=>send(s)},s))
+      ),
+      React.createElement("div",{className:"chat-input-row"},
+        React.createElement("input",{className:"chat-input",placeholder:"Ask about issues in your area...",value:input,onChange:e=>setInput(e.target.value),onKeyDown:e=>e.key==="Enter"&&send()}),
+        React.createElement("button",{className:"chat-send",onClick:()=>send()},"➤")
+      )
+    ),
+    React.createElement("button",{className:"chat-fab",onClick:()=>{setOpen(o=>!o);setHasNew(false);},"aria-label":open?"Close chat":"Open CivitasBot chat","aria-expanded":open},
+      open?"✕":"💬",
+      hasNew&&!open&&React.createElement("div",{className:"notif"},"1")
+    )
+  );
+}
+
+// ── LOCATION PICKER ───────────────────────────────────────────
+function LocationPicker({state,setState,district,setDistrict,area,setArea}){
+  const districts=state?Object.keys(LOC_TREE[state]||{}):[]; 
+  const areas=(state&&district)?(LOC_TREE[state]?.[district]||[]):[];
+  useEffect(()=>{setDistrict("");setArea("");},[state]);
+  useEffect(()=>{setArea("");},[district]);
+  const e=React.createElement;
+  return e("div",{className:"loc-chain"},
+    e("div",{className:"fg",style:{marginBottom:0}},e("label",{className:"fl"},"State"),
+      e("select",{className:"fsel",value:state,onChange:v=>setState(v.target.value)},
+        e("option",{value:""},"Select state"),STATES.map(s=>e("option",{key:s,value:s},s)))),
+    e("div",{className:"fg",style:{marginBottom:0}},e("label",{className:"fl"},"District / Zone"),
+      e("select",{className:"fsel",value:district,onChange:v=>setDistrict(v.target.value),disabled:!state},
+        e("option",{value:""},"Select district"),districts.map(d=>e("option",{key:d,value:d},d)))),
+    e("div",{className:"fg",style:{marginBottom:0}},e("label",{className:"fl"},"Area / Locality"),
+      e("select",{className:"fsel",value:area,onChange:v=>setArea(v.target.value),disabled:!district},
+        e("option",{value:""},"Select area"),areas.map(a=>e("option",{key:a,value:a},a))))
+  );
+}
+
+// ── MULTI-IMAGE UPLOAD ────────────────────────────────────────
+function MultiImageUpload({images,setImages,b64s,setB64s}){
+  const e=React.createElement;
+  function handleFiles(files){
+    const arr=Array.from(files);
+    arr.forEach(file=>{
+      if(images.length+1>5)return;
+      const r=new FileReader();
+      r.onload=ev=>{
+        setImages(p=>[...p,ev.target.result]);
+        setB64s(p=>[...p,ev.target.result.split(",")[1]]);
+      };
+      r.readAsDataURL(file);
+    });
+  }
+  function remove(idx){
+    setImages(p=>p.filter((_,i)=>i!==idx));
+    setB64s(p=>p.filter((_,i)=>i!==idx));
+  }
+  return e("div",null,
+    images.length>0&&e("div",{className:"img-grid"},
+      images.map((src,i)=>e("div",{key:i,className:"img-thumb"},
+        e("img",{src,alt:""}),
+        e("button",{className:"img-thumb-rm",onClick:()=>remove(i)},"✕")
+      )),
+      images.length<5&&e("div",{className:"img-add"},
+        e("input",{type:"file",accept:"image/*",multiple:true,onChange:ev=>handleFiles(ev.target.files)}),
+        "+"
+      )
+    ),
+    images.length===0&&e("div",{className:"uzone",
+      onDragOver:ev=>{ev.preventDefault();ev.currentTarget.classList.add("drag")},
+      onDragLeave:ev=>ev.currentTarget.classList.remove("drag"),
+      onDrop:ev=>{ev.preventDefault();ev.currentTarget.classList.remove("drag");handleFiles(ev.dataTransfer.files)}},
+      e("input",{type:"file",accept:"image/*",multiple:true,onChange:ev=>handleFiles(ev.target.files)}),
+      e("div",{style:{fontSize:"28px",marginBottom:"6px"}},"📷"),
+      e("div",{style:{fontSize:"13px",fontWeight:600,marginBottom:"3px"}},"Upload photos (up to 5)"),
+      e("div",{style:{fontSize:"11px",color:"var(--tx2)"}},"Drag & drop or click · Multiple photos allowed")
+    ),
+    e("div",{style:{fontSize:"11px",color:"var(--tx2)",marginTop:"4px"}},(images.length||0)+"/5 photos added · More photos = higher credibility score")
+  );
+}
+
+
+
+// ── HOME FEED: two-column (Nearby + State-wide) ─────────────
+function HomeFeed({issues, myIssues, userState, onVote, voted, onReport}){
+  const e = React.createElement;
+  const [sectorFilter, setSector] = useState("all");
+
+  const sectorOptions = [
+    {id:"all", label:"All", icon:"🏙️"},
+    {id:"water", label:"Water",       icon:"💧"},
+    {id:"sewage",label:"Sewage",      icon:"🚽"},
+    {id:"pothole",label:"Roads",      icon:"🕳️"},
+    {id:"road",  label:"Road Dmg",    icon:"🚧"},
+    {id:"streetlight",label:"Electric",icon:"💡"},
+    {id:"garbage",label:"Sanitation", icon:"🗑️"},
+    {id:"tree",  label:"Trees",       icon:"🌳"},
+    {id:"encroach",label:"Encroach",  icon:"⚠️"},
+  ];
+
+  // Nearby = same area; State = same state
+  const nearbyIssues = userState
+    ? issues.filter(i => i.area === userState.area && i.state === userState.state)
+    : [];
+  const stateIssues = userState
+    ? issues.filter(i => i.state === userState.state)
+    : issues;
+
+  function applyFilter(arr){
+    if(sectorFilter === "all") return arr;
+    return arr.filter(i => i.category === sectorFilter);
+  }
+
+  const filteredNearby = applyFilter(nearbyIssues).sort((a,b)=>b.votes-a.votes);
+  const filteredState  = applyFilter(stateIssues).sort((a,b)=>b.votes-a.votes);
+
+  return e("div", {className:"page"},
+    // Sector tabs
+    e("div",{style:{display:"flex",gap:"6px",flexWrap:"wrap",marginBottom:"18px",alignItems:"center"}},
+      e("span",{style:{fontSize:"11px",color:"var(--tx2)",fontWeight:600,marginRight:"4px"}},"Sector:"),
+      sectorOptions.map(s=>e("button",{key:s.id,className:`fchip ${sectorFilter===s.id?"on":""}`,onClick:()=>setSector(s.id)},s.icon," ",s.label))
+    ),
+
+    // Two columns
+    e("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"20px"}},
+
+      // LEFT: Nearby
+      e("div",null,
+        e("div",{className:"shead",style:{marginBottom:"10px"}},
+          e("div",{className:"slbl"},
+            e("span",{className:"dot"}),
+            "📍 Near ",userState?userState.area:"You"
+          ),
+          e("span",{style:{fontSize:"11px",color:"var(--tx2)"}},filteredNearby.length+" issues")
+        ),
+        filteredNearby.length === 0
+          ? e("div",{style:{textAlign:"center",padding:"40px 16px",color:"var(--tx2)",border:"2px dashed var(--bdr)",borderRadius:"12px"}},
+              e("div",{style:{fontSize:"30px",marginBottom:"8px"}},"🏘️"),
+              e("div",{style:{fontSize:"13px",fontWeight:600,marginBottom:"4px"}},"All clear nearby!"),
+              e("div",{style:{fontSize:"12px",marginBottom:"12px"}},"No "+( sectorFilter==="all"?"":""+sectorOptions.find(s=>s.id===sectorFilter)?.label+" ")+"issues reported in ",userState?.area||"your area"),
+              e("button",{className:"btn btn-p btn-sm",onClick:onReport},"+ Be first to report")
+            )
+          : e("div",{style:{display:"flex",flexDirection:"column",gap:"10px"}},
+              filteredNearby.slice(0,6).map(i=>e(ICard,{key:i.id,issue:i,onVote,voted:voted[i.id]}))
+            )
+      ),
+
+      // RIGHT: All in State
+      e("div",null,
+        e("div",{className:"shead",style:{marginBottom:"10px"}},
+          e("div",{className:"slbl"},
+            e("span",{className:"dot",style:{background:"var(--acc2)"}}),
+            "🌆 All in ",userState?.state||"India"
+          ),
+          e("span",{style:{fontSize:"11px",color:"var(--tx2)"}},filteredState.length+" issues")
+        ),
+        filteredState.length === 0
+          ? e("div",{style:{textAlign:"center",padding:"40px 16px",color:"var(--tx2)",border:"2px dashed var(--bdr)",borderRadius:"12px"}},
+              e("div",{style:{fontSize:"30px",marginBottom:"8px"}},"🏛️"),
+              e("div",null,"No issues in this state yet")
+            )
+          : e("div",{style:{display:"flex",flexDirection:"column",gap:"10px"}},
+              filteredState.slice(0,6).map(i=>e(ICard,{key:i.id,issue:i,onVote,voted:voted[i.id]}))
+            )
+      )
+    )
+  );
+}
+
+// ── ISSUES TAB WITH SEARCH & FILTER ─────────────────────────
+function IssuesTab({issues,onVote,voted,userState,onChangeLocation}){
+  const e=React.createElement;
+  const [search,setSearch]=useState("");
+  const [fCat,setFC]=useState("all");
+  const [fSev,setFS]=useState("all");
+  const [fSt,setFSt]=useState("all");
+
+  const filtered=issues.filter(i=>{
+    if(fCat!=="all"&&i.category!==fCat)return false;
+    if(fSev!=="all"&&i.severity!==fSev)return false;
+    if(fSt!=="all"&&i.status!==fSt)return false;
+    if(search.trim()){const q=search.toLowerCase();return i.title.toLowerCase().includes(q)||i.desc?.toLowerCase().includes(q)||i.location.toLowerCase().includes(q);}
+    return true;
+  });
+
+  return e("div",{className:"page"},
+    e("div",{className:"ptitle"},"📋 Issues in "+(userState?.state||"All Areas")),
+    e("div",{style:{display:"flex",gap:"8px",flexWrap:"wrap",marginBottom:"14px",alignItems:"center"}},
+      e("div",{className:"input-group",style:{flex:"1 1 180px",minWidth:"160px"}},
+        e("span",{className:"input-icon"},"🔍"),
+        e("input",{className:"fi fi-icon",placeholder:"Search issues…",value:search,onChange:ev=>setSearch(ev.target.value)})
+      ),
+      e("select",{className:"fsel",style:{width:"auto",fontSize:"12px"},value:fCat,onChange:ev=>setFC(ev.target.value)},
+        e("option",{value:"all"},"All Categories"),
+        CATS.map(c=>e("option",{key:c.id,value:c.id},c.icon+" "+c.label))
+      ),
+      e("select",{className:"fsel",style:{width:"auto",fontSize:"12px"},value:fSev,onChange:ev=>setFS(ev.target.value)},
+        e("option",{value:"all"},"All Severity"),
+        ["HIGH","MEDIUM","LOW"].map(s=>e("option",{key:s,value:s},s))
+      ),
+      e("select",{className:"fsel",style:{width:"auto",fontSize:"12px"},value:fSt,onChange:ev=>setFSt(ev.target.value)},
+        e("option",{value:"all"},"All Status"),
+        e("option",{value:"open"},"Open"),
+        e("option",{value:"progress"},"In Progress"),
+        e("option",{value:"resolved"},"Resolved")
+      ),
+      userState&&e("button",{className:"btn btn-g btn-sm",style:{fontSize:"11px"},onClick:onChangeLocation},"📍 Change area")
+    ),
+    e("div",{style:{fontSize:"12px",color:"var(--tx2)",marginBottom:"10px"}},filtered.length+" of "+issues.length+" issues"),
+    filtered.length>0
+      ?e("div",{className:"igrid"},filtered.map(i=>e(ICard,{key:i.id,issue:i,onVote,voted:voted[i.id]})))
+      :e("div",{className:"empty"},e("div",{className:"empty-icon"},"🔍"),e("div",null,"No issues match your filters"))
+  );
+}
+
+// ── ISSUE DETAIL MODAL ───────────────────────────────────────
+function IssueDetail({issue,onClose,onVote,voted,isGovt,onStatusChange,onAddResponse}){
+  const e=React.createElement;
+  const c=CMAP[issue.category]||{icon:"⚠️",label:"Other",color:"#CBD5E1"};
+  const stM={open:["bopen","🔴 Open"],progress:["bprog","🟡 In Progress"],resolved:["bres","🟢 Done"]};
+  const [sc,sl]=stM[issue.status]||stM.open;
+  const [resp,setResp]=useState(issue.govtResponse||"");
+  const [editing,setEditing]=useState(false);
+  const imgs=issue.imageUrls||[];
+  return e("div",{className:"overlay",role:"dialog","aria-modal":"true","aria-label":issue.title,onClick:ev=>{if(ev.target===ev.currentTarget)onClose()}},
+    e("div",{className:"modal",style:{maxWidth:560,maxHeight:"88vh",overflowY:"auto"}},
+      e("div",{className:"mhdr"},
+        e("div",{className:"mtitle"},c.icon+" "+issue.title),
+        e("button",{className:"mclose",onClick:onClose,"aria-label":"Close"},"✕")
+      ),
+      imgs.length>0&&e("div",{className:"icard-imgs",style:{borderRadius:"10px",overflow:"hidden",marginBottom:"14px"}},
+        e("div",{className:"main-img"},e("img",{src:imgs[0],alt:"",loading:"lazy"})),
+        imgs.length>1&&e("div",{className:"side-imgs"},
+          imgs.slice(1,3).map((src,i)=>e("div",{key:i,className:"side-img"},e("img",{src,alt:"",loading:"lazy"}),
+            i===1&&imgs.length>3&&e("div",{className:"side-more"},"+"+(imgs.length-3))))
+        )
+      ),
+      e("div",{style:{display:"flex",gap:"7px",flexWrap:"wrap",marginBottom:"12px"}},
+        e("span",{className:"bx",style:{background:`${c.color}18`,color:c.color}},c.icon," ",c.label),
+        e("span",{className:`bx b${issue.severity}`},issue.severity),
+        e("span",{className:`bx ${sc}`},sl)
+      ),
+      e("div",{style:{fontSize:"13px",color:"var(--tx2)",marginBottom:"10px",display:"flex",alignItems:"center",gap:"6px"}},"📍 ",issue.location),
+      issue.desc&&e("div",{style:{fontSize:"13px",color:"var(--tx)",lineHeight:1.6,marginBottom:"12px",background:"var(--s2)",borderRadius:"8px",padding:"10px 13px"}},issue.desc),
+      e("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px",marginBottom:"12px"}},
+        e("div",{style:{background:"var(--s2)",borderRadius:"8px",padding:"9px 12px"}},
+          e("div",{style:{fontSize:"10px",color:"var(--tx3)",textTransform:"uppercase",letterSpacing:".05em",marginBottom:"3px"}},"Department"),
+          e("div",{style:{fontSize:"12px",fontWeight:600}},issue.dept)
+        ),
+        e("div",{style:{background:"var(--s2)",borderRadius:"8px",padding:"9px 12px"}},
+          e("div",{style:{fontSize:"10px",color:"var(--tx3)",textTransform:"uppercase",letterSpacing:".05em",marginBottom:"3px"}},"Reported"),
+          e("div",{style:{fontSize:"12px",fontWeight:600}},issue.date)
+        ),
+        e("div",{style:{background:"var(--s2)",borderRadius:"8px",padding:"9px 12px"}},
+          e("div",{style:{fontSize:"10px",color:"var(--tx3)",textTransform:"uppercase",letterSpacing:".05em",marginBottom:"3px"}},"AI Confidence"),
+          e("div",{style:{fontSize:"12px",fontWeight:600,color:"var(--acc)"}},issue.aiScore+"%")
+        ),
+        e("div",{style:{background:"var(--s2)",borderRadius:"8px",padding:"9px 12px"}},
+          e("div",{style:{fontSize:"10px",color:"var(--tx3)",textTransform:"uppercase",letterSpacing:".05em",marginBottom:"3px"}},"Community Votes"),
+          e("div",{style:{fontSize:"12px",fontWeight:600,color:"var(--warn)"}},issue.votes+" votes")
+        ),
+        issue.etaLabel&&e("div",{style:{background:issue.escalated?"rgba(248,113,113,.08)":"var(--s2)",border:issue.escalated?"1px solid rgba(248,113,113,.25)":"none",borderRadius:"8px",padding:"9px 12px",gridColumn:"span 2"}},
+          e("div",{style:{fontSize:"10px",color:"var(--tx3)",textTransform:"uppercase",letterSpacing:".05em",marginBottom:"3px"}},"Resolution ETA"),
+          e("div",{style:{fontSize:"12px",fontWeight:600,color:issue.escalated?"var(--dan)":"var(--ok)"}},
+            issue.escalated?"⚠️ Overdue — Escalated to Head Officer":"📅 Expected by "+issue.etaLabel
+          )
+        )
+      ),
+      issue.govtResponse&&e("div",{className:"govtresp"},e("strong",null,"🏛️ Official Response: "),issue.govtResponse),
+      issue.resolvedAt&&e("div",{style:{fontSize:"12px",color:"var(--ok)",marginTop:"6px"}},"✅ Resolved on: "+issue.resolvedAt),
+      isGovt&&e("div",{style:{marginTop:"12px",paddingTop:"12px",borderTop:"1px solid var(--bdr)"}},
+        e("div",{style:{display:"flex",gap:"6px",marginBottom:"8px",flexWrap:"wrap"}},
+          e("select",{className:"status-sel",value:issue.status,onChange:ev=>onStatusChange(issue.id,ev.target.value)},
+            e("option",{value:"open"},"🔴 Open"),
+            e("option",{value:"progress"},"🟡 In Progress"),
+            e("option",{value:"resolved"},"🟢 Resolved")
+          ),
+          e("button",{className:"btn btn-sm btn-g",onClick:()=>setEditing(!editing)},editing?"Cancel":"💬 Respond")
+        ),
+        editing&&e("div",null,
+          e("textarea",{className:"fta",style:{minHeight:"60px",fontSize:"12px"},placeholder:"Write official response...",value:resp,onChange:ev=>setResp(ev.target.value)}),
+          e("button",{className:"btn btn-v btn-sm btn-fw",style:{marginTop:"4px"},onClick:()=>{onAddResponse(issue.id,resp);setEditing(false);}},"Send Response")
+        )
+      ),
+      !isGovt&&e("div",{style:{marginTop:"14px",display:"flex",gap:"8px"}},
+        e("button",{className:`btn ${voted?"btn-p":"btn-g"} btn-fw`,onClick:()=>onVote(issue.id)},
+          voted?"★ Remove Vote":"▲ Upvote · "+issue.votes+" votes"
+        ),
+        e("button",{className:"btn btn-g",onClick:onClose},"Close")
+      )
+    )
+  );
+}
+
+// ── ISSUE CARD ────────────────────────────────────────────────
+function ICard({issue,onVote,voted,isGovt=false,onStatusChange,onAddResponse}){
+  const [showDetail,setShowDetail]=useState(false);
+  const e=React.createElement;
+  const c=CMAP[issue.category]||{icon:"⚠️",label:"Other",color:"#CBD5E1"};
+  const stM={open:["bopen","🔴 Open"],progress:["bprog","🟡 In Progress"],resolved:["bres","🟢 Done"]};
+  const [sc,sl]=stM[issue.status]||stM.open;
+  const [resp,setResp]=useState(issue.govtResponse||"");
+  const [editing,setEditing]=useState(false);
+  const imgs=issue.imageUrls||[];
+  const isHP=issue.votes>=25&&issue.status!=="resolved";
+
+  return e(React.Fragment,null,
+    showDetail&&e(IssueDetail,{issue,onClose:()=>setShowDetail(false),onVote,voted,isGovt,onStatusChange,onAddResponse}),
+    e("div",{className:"icard",onClick:()=>setShowDetail(true),style:{cursor:"pointer"}},
+    // Images section
+    imgs.length>0
+      ?e("div",{className:"icard-imgs"},
+          e("div",{className:"main-img"},e("img",{src:imgs[0],alt:"",loading:"lazy"})),
+          imgs.length>1&&e("div",{className:"side-imgs"},
+            imgs.slice(1,3).map((src,i)=>e("div",{key:i,className:"side-img"},
+              e("img",{src,alt:"",loading:"lazy"}),
+              i===1&&imgs.length>3&&e("div",{className:"side-more"},"+"+( imgs.length-3))
+            ))
+          )
+        )
+      :e("div",{className:"icard-imgs"},e("div",{className:"main-img"},e("span",{style:{fontSize:"38px"}},c.icon))),
+    isHP&&e("div",{className:"hp-banner"},"🚨 HIGH PRIORITY · "+issue.votes+" community votes"),
+    e("div",{className:"icard-body"},
+      e("div",{className:"imeta"},
+        e("span",{className:"bx",style:{background:`${c.color}18`,color:c.color}},c.icon," ",c.label),
+        e("span",{className:`bx b${issue.severity}`},issue.severity),
+        e("span",{className:`bx ${sc}`},sl)
+      ),
+      e("div",{className:"icard-title"},issue.title),
+      e("div",{className:"icard-loc"},"📍 ",issue.location),
+      e("div",{style:{fontSize:"11px",color:"var(--tx2)",marginBottom:"3px"}},"AI: ",e("b",{style:{color:"var(--tx)"}},issue.aiScore+"%")," · ",issue.dept),
+      e("div",{className:"icard-bar"},e("div",{className:"icard-bar-fl",style:{width:issue.aiScore+"%"}})),
+      issue.govtResponse&&e("div",{className:"govtresp"},e("strong",null,"🏛️ Authority: "),issue.govtResponse),
+      isGovt&&e("div",{style:{marginTop:"8px",paddingTop:"8px",borderTop:"1px solid var(--bdr)"}},
+        e("div",{style:{display:"flex",gap:"6px",marginBottom:"5px",flexWrap:"wrap"}},
+          e("select",{className:"status-sel",value:issue.status,onChange:ev=>onStatusChange(issue.id,ev.target.value)},
+            e("option",{value:"open"},"🔴 Open"),
+            e("option",{value:"progress"},"🟡 In Progress"),
+            e("option",{value:"resolved"},"🟢 Resolved")
+          ),
+          e("button",{className:"btn btn-sm btn-g",onClick:()=>setEditing(!editing)},editing?"Cancel":"💬 Respond")
+        ),
+        editing&&e("div",null,
+          e("textarea",{className:"fta",style:{minHeight:"50px",fontSize:"12px"},placeholder:"Write official response...",value:resp,onChange:ev=>setResp(ev.target.value)}),
+          e("button",{className:"btn btn-v btn-sm btn-fw",style:{marginTop:"4px"},onClick:()=>{onAddResponse(issue.id,resp);setEditing(false);}},"Send Response")
+        )
+      ),
+      e("div",{className:"icard-foot"},
+        !isGovt&&e("button",{className:`vbtn ${voted?"on":""}`,onClick:ev=>{ev.stopPropagation();onVote(issue.id);},"aria-label":(voted?"Remove vote from ":"Upvote ")+issue.title,"aria-pressed":!!voted},voted?"★ "+issue.votes+" voted":"▲ "+issue.votes+" vote"+(issue.votes!==1?"s":"")),
+        isGovt&&e("span",{style:{fontSize:"12px",color:"var(--warn)",fontWeight:600}},"▲ "+issue.votes+" votes"),
+        e("span",{style:{fontSize:"10px",color:"var(--tx3)"}},issue.date)
+      )
+    )
+  )
+  );
+}
+
+// ── REPORT MODAL ──────────────────────────────────────────────
+function ReportModal({onClose,onSubmit,onUpvote,allIssues,apiKey,defaultState,defaultDistrict,defaultArea}){
+  const e=React.createElement;
+  const [step,setStep]=useState(1);
+  const [cat,setCat]=useState(null);
+  const [images,setImages]=useState([]);
+  const [b64s,setB64s]=useState([]);
+  const [desc,setDesc]=useState("");
+  const [state,setSt]=useState(defaultState||"");
+  const [district,setDi]=useState(defaultDistrict||"");
+  const [area,setAr]=useState(defaultArea||"");
+  const [landmark,setLm]=useState("");
+  const [busy,setBusy]=useState(false);
+  const [ai,setAi]=useState(null);
+  const [dups,setDups]=useState([]);
+
+  function checkDups(){
+    const found=allIssues.filter(i=>i.category===cat&&i.state===state&&i.district===district&&i.area===area&&i.status!=="resolved");
+    if(found.length>0){setDups(found);setStep(2.5);}else setStep(3);
+  }
+
+  async function analyze(){
+    setStep(4);setBusy(true);
+    const result=await runGemini(b64s[0],cat,desc,apiKey);
+    setAi(result);setBusy(false);
+  }
+
+  const [submitted,setSubmitted]=useState(null);
+  function submit(){
+    const c=CMAP[ai?.category||cat]||CATS[0];
+    const coords=STATE_COORDS[state]||{lat:20,lng:78};
+    const j=()=>(Math.random()-.5)*.05;
+    const locStr=[area,district,state].filter(Boolean).join(" › ");
+    const issueData={
+      category:ai?.category||cat,severity:ai?.severity||"MEDIUM",dept:ai?.dept||c.dept,
+      aiScore:ai?.score||70,title:desc||(c.label+" issue in "+area),
+      location:locStr,area,district,state,
+      lat:coords.lat+j(),lng:coords.lng+j(),
+      landmark,desc:ai?.desc||desc,tags:ai?.tags||[],
+      status:"open",votes:0,date:new Date().toISOString().split("T")[0],
+      imageUrls:[],govtResponse:null,resolvedAt:null,
+    };
+    onSubmit(issueData,b64s);
+    setSubmitted(issueData);
+  }
+
+  // STEP 2.5: duplicates
+  if(step===2.5)return e("div",{className:"overlay",onClick:ev=>{if(ev.target===ev.currentTarget)onClose()}},
+    e("div",{className:"modal"},
+      e("div",{className:"mhdr"},e("div",{className:"mtitle"},"⚠️ Similar Issues Found"),e("button",{className:"mclose",onClick:onClose},"✕")),
+      e("div",{style:{background:"rgba(251,191,36,.07)",border:"1px solid rgba(251,191,36,.25)",borderRadius:"10px",padding:"12px",marginBottom:"11px"}},
+        e("div",{style:{fontSize:"13px",fontWeight:700,color:"var(--warn)",marginBottom:"4px"}},"🔥 "+dups.length+" similar issue"+(dups.length>1?"s already reported in your area":"already reported in your area")),
+        e("div",{style:{fontSize:"12px",color:"var(--tx2)"},"lineHeight":"1.6"},"Upvoting pushes issues to higher priority faster. Please check if any of these match your issue:")
+      ),
+      dups.slice(0,3).map(d=>e("div",{key:d.id,className:"dup-card"},
+        e("div",{className:"dup-title"},d.title),
+        e("div",{className:"dup-meta"},"📍 "+d.location+" · "+d.votes+" votes · "+d.status),
+        e("button",{className:"btn btn-p btn-sm",onClick:()=>{onUpvote(d.id);onClose();}},"▲ Upvote this issue")
+      )),
+      e("div",{style:{display:"flex",gap:"8px",marginTop:"10px"}},
+        e("button",{className:"btn btn-g",style:{flex:1},onClick:()=>setStep(3)},"Mine is different — continue"),
+        e("button",{className:"btn btn-g btn-sm",onClick:onClose},"Cancel")
+      )
+    )
+  );
+
+  if(submitted)return e("div",{className:"overlay"},
+    e("div",{className:"modal",style:{textAlign:"center",padding:"32px 24px"}},
+      e("div",{style:{fontSize:"52px",marginBottom:"12px"}},"🎉"),
+      e("div",{style:{fontSize:"18px",fontWeight:700,marginBottom:"6px"}},"Report Submitted!"),
+      e("div",{style:{fontSize:"13px",color:"var(--tx2)",marginBottom:"16px"}},"Your issue has been logged and routed to "+submitted.dept),
+      e("div",{style:{background:"var(--s2)",borderRadius:"10px",padding:"12px 16px",marginBottom:"20px",textAlign:"left"}},
+        e("div",{style:{fontWeight:600,marginBottom:"4px"}},submitted.title),
+        e("div",{style:{fontSize:"12px",color:"var(--tx2)"}},"📍 "+submitted.location),
+        e("div",{style:{fontSize:"12px",color:"var(--acc2)",marginTop:"5px"}},"🏛️ Routed to: ",e("b",null,submitted.dept)),
+        submitted.etaLabel&&e("div",{style:{fontSize:"12px",color:"var(--ok)",marginTop:"3px"}},"📅 Expected resolution by: ",e("b",null,submitted.etaLabel)),
+        submitted.etaLabel&&e("div",{style:{fontSize:"11px",color:"var(--tx3)",marginTop:"2px"}},"If not resolved by this date, it will escalate to the Head Officer automatically."),
+        e("div",{style:{display:"flex",gap:"7px",marginTop:"8px",flexWrap:"wrap"}},
+          e("span",{className:`bx b${submitted.severity}`},submitted.severity),
+          e("span",{className:"bx bopen"},"🔴 Open"),
+          e("span",{className:"bx",style:{background:"rgba(34,211,238,.1)",color:"var(--acc)"}},submitted.aiScore+"% confidence")
+        )
+      ),
+      e("button",{className:"btn btn-p btn-fw",onClick:onClose},"✅ Done")
+    )
+  );
+
+  return e("div",{className:"overlay",onClick:ev=>{if(ev.target===ev.currentTarget)onClose()}},
+    e("div",{className:"modal"},
+      e("div",{className:"mhdr"},
+        e("div",{className:"mtitle"},step===1?"🏷️ Category":step===2?"📍 Location":step===3?"📸 Photos":step===4?"🤖 AI Analysis":""),
+        e("button",{className:"mclose",onClick:onClose,"aria-label":"Close report form"},"✕")
+      ),
+      e("div",{className:"steps"},[1,2,3,4].map(i=>e("div",{key:i,className:`sdot ${i<step?"done":""}`}))),
+
+      // STEP 1
+      step===1&&e("div",null,
+        e("p",{style:{fontSize:"12px",color:"var(--tx2)",marginBottom:"10px"}},"Select the type of issue you want to report:"),
+        e("div",{className:"catgrid"},CATS.map(c=>e("div",{key:c.id,className:`catopt ${cat===c.id?"sel":""}`,onClick:()=>setCat(c.id)},
+          e("div",{className:"cat-icon"},c.icon),e("div",{className:"cat-lbl"},c.label)
+        ))),
+        e("button",{className:"btn btn-p btn-fw",style:{marginTop:"12px"},disabled:!cat,onClick:()=>setStep(2)},"Next: Location →")
+      ),
+
+      // STEP 2
+      step===2&&e("div",null,
+        e("p",{style:{fontSize:"12px",color:"var(--tx2)",marginBottom:"11px"}},"Where exactly is this issue?"),
+        e(LocationPicker,{state,setState:setSt,district,setDistrict:setDi,area,setArea:setAr}),
+        e("div",{className:"fg",style:{marginTop:"10px"}},
+          e("label",{className:"fl"},"Landmark / Street (optional)"),
+          e("input",{className:"fi",placeholder:"e.g. Near bus stop, opp SBI Bank",value:landmark,onChange:ev=>setLm(ev.target.value)})
+        ),
+        e("div",{style:{display:"flex",gap:"8px",marginTop:"4px"}},
+          e("button",{className:"btn btn-g",onClick:()=>setStep(1)},"← Back"),
+          e("button",{className:"btn btn-p",style:{flex:1},disabled:!state||!district||!area,onClick:checkDups},"Next: Photos →")
+        )
+      ),
+
+      // STEP 3
+      step===3&&e("div",null,
+        e(MultiImageUpload,{images,setImages,b64s,setB64s}),
+        e("div",{className:"fg",style:{marginTop:"10px"}},
+          e("label",{className:"fl"},"Brief Description"),
+          e("textarea",{className:"fta",placeholder:"Describe what you see...",value:desc,onChange:ev=>setDesc(ev.target.value)})
+        ),
+        e("div",{style:{display:"flex",gap:"8px"}},
+          e("button",{className:"btn btn-g",onClick:()=>setStep(2)},"← Back"),
+          e("button",{className:"btn btn-p",style:{flex:1},disabled:!desc.trim()&&images.length===0,onClick:analyze},"🤖 Analyze with Gemini →")
+        )
+      ),
+
+      // STEP 4
+      step===4&&e("div",null,
+        images.length>0&&e("div",{className:"img-grid",style:{marginBottom:"10px"}},
+          images.slice(0,3).map((src,i)=>e("div",{key:i,className:"img-thumb"},e("img",{src,alt:""})))
+        ),
+        busy&&e("div",{className:"thinking"},
+          e("div",{style:{display:"flex",alignItems:"center",gap:"6px"}},e("div",{className:"aipulse"}),"Gemini is analyzing your photo…"),
+          e("div",{className:"tdots"},e("span"),e("span"),e("span")),
+          e("div",{style:{fontSize:"11px",color:"var(--tx2)",marginTop:"3px"}},"Detecting issue · Assessing severity · Routing to department")
+        ),
+        !busy&&ai&&e(React.Fragment,null,
+          e("div",{className:"aibox",style:{marginBottom:"10px"}},
+            e("div",{className:"aihdr"},e("div",{className:"aipulse"}),"Gemini AI Analysis"),
+            e("div",{className:"airow"},e("span",{className:"aikey"},"Detected"),e("span",{className:"aival"},CMAP[ai.category]?.icon," ",CMAP[ai.category]?.label||ai.category)),
+            e("div",{className:"airow"},e("span",{className:"aikey"},"Severity"),e("span",{className:`aival ${ai.severity}`},ai.severity)),
+            e("div",{className:"airow"},e("span",{className:"aikey"},"Dept"),e("span",{className:"aival"},ai.dept)),
+            e("div",{className:"airow"},e("span",{className:"aikey"},"Confidence"),e("span",{className:"aival"},ai.score+"%")),
+            e("div",{className:"airow"},e("span",{className:"aikey"},"Est. Fix"),e("span",{className:"aival"},ai.eta)),
+            e("div",{className:"aidesc"},ai.desc)
+          ),
+          !apiKey&&e("div",{style:{fontSize:"11px",color:"var(--tx2)",background:"var(--s2)",borderRadius:"7px",padding:"7px 10px",marginBottom:"8px"}},"⚡ Running in demo mode — AI analysis is simulated"),
+          e("div",{style:{display:"flex",gap:"8px"}},
+            e("button",{className:"btn btn-g",onClick:()=>{setStep(3);setAi(null);}},"← Redo"),
+            e("button",{className:"btn btn-p",style:{flex:1},onClick:submit},"✅ Submit Report")
+          )
+        )
+      )
+    )
+  );
+}
+
+// ── MAP ───────────────────────────────────────────────────────
+function MapView({issues,filterState}){
+  const mapRef=useRef(null);
+  const inst=useRef(null);
+  const mks=useRef([]);
+  const [fCat,setFC]=useState("all");
+
+  useEffect(()=>{
+    if(!mapRef.current)return;
+    if(inst.current){inst.current.remove();inst.current=null;}
+    const sc=filterState&&STATE_COORDS[filterState]?STATE_COORDS[filterState]:{lat:22,lng:82};
+    const zm=filterState?9:5;
+    const m=L.map(mapRef.current,{center:[sc.lat,sc.lng],zoom:zm});
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{attribution:"© CARTO",subdomains:"abcd",maxZoom:19}).addTo(m);
+    inst.current=m;
+    // Force redraw in case container was hidden (e.g. inside a tab) when map initialized
+    setTimeout(()=>{ if(inst.current) inst.current.invalidateSize(); }, 100);
+    return()=>{if(inst.current){inst.current.remove();inst.current=null;}};
+  },[filterState]);
+
+  useEffect(()=>{
+    // Wait for map instance to be ready
+    const m=inst.current;if(!m)return;
+    mks.current.forEach(mk=>mk.remove());mks.current=[];
+    const sc={HIGH:"#F87171",MEDIUM:"#FBBF24",LOW:"#34D399"};
+    const toShow=issues.filter(i=>(fCat==="all"||i.category===fCat));
+    toShow.forEach(issue=>{
+      const c=CMAP[issue.category]||{icon:"⚠️"};
+      const col=sc[issue.severity]||"#94A3B8";
+      const sz=Math.max(28,28+Math.floor(issue.votes/6)*3);
+      const icon=L.divIcon({className:"",
+        html:`<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${col}22;border:2.5px solid ${col};display:flex;align-items:center;justify-content:center;font-size:${Math.max(13,sz*.45)}px;cursor:pointer;box-shadow:0 0 10px ${col}44;transition:transform .2s">${c.icon}</div>`,
+        iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+      const mk=L.marker([issue.lat,issue.lng],{icon}).addTo(m);
+      mk.bindPopup(`<div style="font-family:Inter,sans-serif;min-width:190px;color:#0f172a">
+        <div style="font-weight:700;font-size:13px;margin-bottom:4px">${issue.title}</div>
+        <div style="font-size:11px;color:#64748B;margin-bottom:6px">📍 ${issue.location}</div>
+        <span style="background:${col}22;color:${col};font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px">${issue.severity}</span>
+        <span style="background:#f1f5f9;color:#475569;font-size:10px;padding:2px 7px;border-radius:10px;margin-left:4px">${issue.dept}</span>
+        <div style="font-size:11px;color:#FBBF24;font-weight:600;margin-top:5px">▲ ${issue.votes} votes</div>
+        ${issue.govtResponse?`<div style="font-size:10px;color:#6366f1;margin-top:4px">🏛️ ${issue.govtResponse.slice(0,60)}…</div>`:""}
+      </div>`,{maxWidth:240});
+      mks.current.push(mk);
+    });
+    // State clusters only when viewing all
+    if(!filterState){
+      const sc2={};issues.forEach(i=>{if(i.state)sc2[i.state]=(sc2[i.state]||0)+1;});
+      Object.entries(STATE_COORDS).forEach(([s,coords])=>{
+        const n=sc2[s]||0;if(!n)return;
+        const ci=L.circleMarker([coords.lat,coords.lng],{radius:Math.min(10+n*5,36),fillColor:"rgba(34,211,238,.1)",fillOpacity:1,color:"#22D3EE",weight:1.5,opacity:.5}).addTo(m);
+        ci.bindTooltip(`${s}: ${n} issue${n!==1?"s":""}`,{permanent:false,direction:"top"});
+        mks.current.push(ci);
+      });
+    }
+  },[issues,fCat,filterState]);
+
+  const e=React.createElement;
+  return e("div",{className:"mapwrap"},
+    e("div",{className:"maptbar"},
+      e("span",{style:{fontSize:"11px",color:"var(--tx2)"}},"Filter by type:"),
+      ["all",...CATS.map(c=>c.id)].map(id=>{
+        const c=id==="all"?{label:"All",icon:"🗺️"}:CMAP[id];
+        return e("button",{key:id,className:`fchip ${fCat===id?"on":""}`,onClick:()=>setFC(id)},c?.icon," ",c?.label);
+      })
+    ),
+    e("div",{ref:mapRef,style:{height:"430px",borderRadius:"0 0 12px 12px",zIndex:1}}),
+    e("div",{className:"mapinfo"},
+      [{col:"#F87171",l:"High"},{col:"#FBBF24",l:"Med"},{col:"#34D399",l:"Low"}].map((x,i)=>
+        e("div",{key:i,style:{display:"flex",alignItems:"center",gap:"4px"}},e("div",{style:{width:"8px",height:"8px",borderRadius:"50%",background:x.col}}),x.l)
+      ),
+      e("span",null,"Pin size = votes"),
+      e("span",{style:{marginLeft:"auto"}},"Click pin for details")
+    )
+  );
+}
+
+
+// ── ANALYTICS DASHBOARD ───────────────────────────────────────
+function AnalyticsDashboard({issues,officer}){
+  const e=React.createElement;
+  const myIssues=useMemo(()=>issues.filter(i=>officer.state==="all"||i.state===officer.state),[issues,officer.state]);
+  const total=myIssues.length;
+  const resolved=useMemo(()=>myIssues.filter(i=>i.status==="resolved").length,[myIssues]);
+  const resRate=total?Math.round(resolved/total*100):0;
+  const avgVotes=useMemo(()=>total?Math.round(myIssues.reduce((s,i)=>s+i.votes,0)/total):0,[myIssues,total]);
+
+  // By category
+  const byCat=useMemo(()=>{const m={};CATS.forEach(c=>{m[c.id]=myIssues.filter(i=>i.category===c.id).length;});return m;},[myIssues]);
+  const maxCat=Math.max(...Object.values(byCat),1);
+
+  // By severity
+  const bySev=useMemo(()=>({HIGH:myIssues.filter(i=>i.severity==="HIGH").length,MEDIUM:myIssues.filter(i=>i.severity==="MEDIUM").length,LOW:myIssues.filter(i=>i.severity==="LOW").length}),[myIssues]);
+
+  // By status
+  const bySt=useMemo(()=>({open:myIssues.filter(i=>i.status==="open").length,progress:myIssues.filter(i=>i.status==="progress").length,resolved}),[myIssues,resolved]);
+
+  // Top voted
+  const topVoted=useMemo(()=>[...myIssues].sort((a,b)=>b.votes-a.votes).slice(0,5),[myIssues]);
+
+  const Bar=({val,max,col})=>e("div",{style:{flex:1,height:"8px",background:"var(--s2)",borderRadius:"4px",overflow:"hidden"}},
+    e("div",{style:{width:Math.round(val/max*100)+"%",height:"100%",background:col,borderRadius:"4px",transition:"width .4s ease"}})
+  );
+
+  return e("div",{className:"page"},
+    e("div",{className:"ptitle",style:{color:"var(--acc2)"}},"📊 Analytics Dashboard"),
+    e("div",{className:"psub"},"Performance overview for "+(officer.state==="all"?"All India":officer.state)),
+
+    // KPI strip
+    e("div",{className:"g4",style:{marginBottom:"20px"}},
+      [{n:total,l:"Total Issues",col:"var(--acc)"},{n:resolved,l:"Resolved",col:"var(--ok)"},{n:resRate+"%",l:"Resolution Rate",col:"var(--acc2)"},{n:avgVotes,l:"Avg Votes/Issue",col:"var(--warn)"}]
+        .map((m,i)=>e("div",{key:i,className:"stat-card"},e("div",{className:"stat-num",style:{color:m.col}},m.n),e("div",{className:"stat-lbl"},m.l)))
+    ),
+
+    e("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"14px",marginBottom:"14px"}},
+      // By category
+      e("div",{className:"card"},
+        e("div",{style:{fontWeight:700,fontSize:"13px",marginBottom:"12px"}},"Issues by Category"),
+        CATS.map(c=>byCat[c.id]>0&&e("div",{key:c.id,style:{display:"flex",alignItems:"center",gap:"8px",marginBottom:"8px"}},
+          e("span",{style:{fontSize:"14px",width:"18px"}},c.icon),
+          e("span",{style:{fontSize:"11px",color:"var(--tx2)",width:"90px",flexShrink:0}},c.label),
+          e(Bar,{val:byCat[c.id],max:maxCat,col:c.color}),
+          e("span",{style:{fontSize:"11px",fontWeight:700,width:"20px",textAlign:"right"}},byCat[c.id])
+        ))
+      ),
+      // By severity & status
+      e("div",{className:"card"},
+        e("div",{style:{fontWeight:700,fontSize:"13px",marginBottom:"12px"}},"Severity Breakdown"),
+        [["HIGH","#F87171"],["MEDIUM","#FBBF24"],["LOW","#34D399"]].map(([sev,col])=>
+          e("div",{key:sev,style:{display:"flex",alignItems:"center",gap:"8px",marginBottom:"8px"}},
+            e("span",{style:{fontSize:"11px",color:col,fontWeight:700,width:"60px"}},"● "+sev),
+            e(Bar,{val:bySev[sev],max:total||1,col}),
+            e("span",{style:{fontSize:"11px",fontWeight:700,width:"20px",textAlign:"right"}},bySev[sev])
+          )
+        ),
+        e("div",{style:{borderTop:"1px solid var(--bdr)",marginTop:"12px",paddingTop:"12px"}}),
+        e("div",{style:{fontWeight:700,fontSize:"13px",marginBottom:"12px"}},"Status Breakdown"),
+        [["open","🔴 Open","var(--dan)"],["progress","🟡 Progress","var(--warn)"],["resolved","🟢 Resolved","var(--ok)"]].map(([st,lbl,col])=>
+          e("div",{key:st,style:{display:"flex",alignItems:"center",gap:"8px",marginBottom:"8px"}},
+            e("span",{style:{fontSize:"11px",color:col,fontWeight:600,width:"80px"}},lbl),
+            e(Bar,{val:bySt[st],max:total||1,col}),
+            e("span",{style:{fontSize:"11px",fontWeight:700,width:"20px",textAlign:"right"}},bySt[st])
+          )
+        )
+      )
+    ),
+
+    // Top voted
+    e("div",{className:"card"},
+      e("div",{style:{fontWeight:700,fontSize:"13px",marginBottom:"12px"}},"🏆 Top Voted Issues"),
+      topVoted.length===0
+        ?e("div",{style:{color:"var(--tx2)",fontSize:"12px"}},"No issues yet")
+        :e("div",{className:"card",style:{padding:0,overflow:"auto"}},
+            e("table",{className:"gtable"},
+              e("thead",null,e("tr",null,["Issue","Category","Severity","Votes","Status"].map(h=>e("th",{key:h},h)))),
+              e("tbody",null,topVoted.map(issue=>{
+                const c=CMAP[issue.category]||{icon:"⚠️",label:"Other"};
+                const sCol={HIGH:"var(--dan)",MEDIUM:"var(--warn)",LOW:"var(--ok)"};
+                return e("tr",{key:issue.id},
+                  e("td",null,e("div",{style:{fontWeight:600,fontSize:"12px"}},issue.title),e("div",{style:{fontSize:"10px",color:"var(--tx2)"}},issue.location)),
+                  e("td",null,c.icon," ",c.label),
+                  e("td",null,e("span",{style:{color:sCol[issue.severity],fontWeight:700}},issue.severity)),
+                  e("td",{style:{color:"var(--warn)",fontWeight:700}},issue.votes),
+                  e("td",null,e("span",{className:`bx ${issue.status==="open"?"bopen":issue.status==="progress"?"bprog":"bres"}`},issue.status))
+                );
+              }))
+            )
+          )
+    )
+  );
+}
+
+// ── ETA HELPER ────────────────────────────────────────────────
+function etaStatus(issue){
+  if(!issue.etaTs) return {label:"No ETA",color:"var(--tx3)",overdue:false};
+  const now=Date.now();
+  const diff=issue.etaTs-now;
+  const days=Math.ceil(diff/(24*3600*1000));
+  if(issue.status==="resolved") return {label:"✅ Resolved",color:"var(--ok)",overdue:false};
+  if(days<0) return {label:"⚠️ "+Math.abs(days)+"d overdue",color:"var(--dan)",overdue:true};
+  if(days===0) return {label:"⏰ Due today",color:"var(--warn)",overdue:false};
+  if(days<=2) return {label:"⏰ "+days+"d left",color:"var(--warn)",overdue:false};
+  return {label:days+"d left",color:"var(--ok)",overdue:false};
+}
+
+// ── GOVT DASHBOARD ────────────────────────────────────────────
+function GovtDashboard({issues,onStatusChange,onAddResponse,officer}){
+  const e=React.createElement;
+  const [tab,setTab]=useState("queue");
+  const [fSev,setFS]=useState("all");
+  const [fCat,setFC]=useState("all");
+
+  // Dept-strict: officer sees ONLY their dept issues in their state
+  const myIssues = issues.filter(i => {
+    const stateMatch = !officer.state || officer.state==="all" || i.state===officer.state;
+    const deptMatch  = !officer.dept  || officer.dept==="all"  || i.dept===officer.dept;
+    return stateMatch && deptMatch;
+  });
+
+  // Head officers also see escalated issues from their dept
+  const escalated = myIssues.filter(i => i.escalated && i.status!=="resolved");
+
+  const open   = myIssues.filter(i=>i.status==="open").length;
+  const prog   = myIssues.filter(i=>i.status==="progress").length;
+  const res    = myIssues.filter(i=>i.status==="resolved").length;
+  const high   = myIssues.filter(i=>i.severity==="HIGH"&&i.status!=="resolved").length;
+  const escCnt = escalated.length;
+
+  const filtered=myIssues.filter(i=>{
+    if(fSev!=="all"&&i.severity!==fSev)return false;
+    if(fCat!=="all"&&i.category!==fCat)return false;
+    if(tab==="queue")   return i.status!=="resolved";
+    if(tab==="resolved")return i.status==="resolved";
+    if(tab==="escalated")return i.escalated&&i.status!=="resolved";
+    return true;
+  }).sort((a,b)=>{
+    // Escalated first, then HIGH, then votes
+    if(a.escalated!==b.escalated) return a.escalated?-1:1;
+    const sp={HIGH:3,MEDIUM:2,LOW:1};
+    return(sp[b.severity]-sp[a.severity])||b.votes-a.votes;
+  });
+
+  return e("div",{className:"page"},
+    e("div",{className:"ptitle",style:{color:"var(--acc2)"}},"🏛️ Government Dashboard"),
+    e("div",{className:"psub"},
+      "Welcome, "+officer.name,
+      " · ",e("b",{style:{color:"var(--acc2)"}},officer.dept),
+      " · "+(officer.state==="all"?"All India":officer.state),
+      officer.isHead && e("span",{style:{marginLeft:"8px",fontSize:"11px",background:"rgba(251,191,36,.15)",color:"var(--warn)",padding:"2px 8px",borderRadius:"10px",fontWeight:700}},"👑 Head Officer")
+    ),
+    e("div",{className:"g4",style:{marginBottom:"16px"}},
+      [{n:open,l:"Open Issues",col:"var(--dan)"},{n:prog,l:"In Progress",col:"var(--warn)"},{n:res,l:"Resolved",col:"var(--ok)"},{n:escCnt,l:"🚨 Overdue / Escalated",col:"#a78bfa"}]
+        .map((m,i)=>e("div",{key:i,className:"stat-card"},e("div",{className:"stat-num",style:{color:m.col}},m.n),e("div",{className:"stat-lbl"},m.l)))
+    ),
+    // Escalation alert banner
+    escCnt>0&&e("div",{style:{background:"rgba(167,139,250,.08)",border:"1px solid rgba(167,139,250,.3)",borderRadius:"10px",padding:"11px 14px",marginBottom:"14px",display:"flex",alignItems:"center",gap:"10px"}},
+      e("span",{style:{fontSize:"20px"}},"🚨"),
+      e("div",null,
+        e("b",{style:{color:"#a78bfa"}},escCnt+" issue"+(escCnt>1?"s have":"has")+" exceeded their resolution deadline"),
+        e("div",{style:{fontSize:"11px",color:"var(--tx2)",marginTop:"2px"}},
+          officer.isHead?"These are visible to you as Head Officer. Immediate action required.":"These will be escalated to your Head Officer if not resolved soon."
+        )
+      ),
+      e("button",{className:"btn btn-sm",style:{marginLeft:"auto",background:"rgba(167,139,250,.15)",color:"#a78bfa",border:"1px solid rgba(167,139,250,.3)"},onClick:()=>setTab("escalated")},"View →")
+    ),
+    high>0&&e("div",{style:{background:"rgba(248,113,113,.07)",border:"1px solid rgba(248,113,113,.2)",borderRadius:"10px",padding:"11px 14px",marginBottom:"14px",display:"flex",alignItems:"center",gap:"10px"}},
+      e("span",{style:{fontSize:"20px"}},"🔴"),
+      e("div",null,e("b",{style:{color:"var(--dan)"}},high+" HIGH severity issue"+(high>1?"s":"")),e("div",{style:{fontSize:"11px",color:"var(--tx2)",marginTop:"2px"}},"Sorted by severity and escalation status below"))
+    ),
+    e("div",{style:{display:"flex",gap:"7px",flexWrap:"wrap",marginBottom:"14px",alignItems:"center"}},
+      [
+        {id:"queue",label:"🔴 Action Queue"},
+        {id:"escalated",label:`🚨 Overdue (${escCnt})`},
+        {id:"resolved",label:"🟢 Resolved"},
+        {id:"all",label:"📋 All"},
+      ].map(t=>e("button",{key:t.id,className:`btn btn-sm ${tab===t.id?"btn-v":"btn-g"}`,onClick:()=>setTab(t.id)},t.label)),
+      e("div",{style:{marginLeft:"auto",display:"flex",gap:"6px"}},
+        e("select",{className:"fsel",style:{width:"auto",fontSize:"11px",padding:"4px 9px"},value:fSev,onChange:ev=>setFS(ev.target.value)},
+          e("option",{value:"all"},"All Severity"),["HIGH","MEDIUM","LOW"].map(s=>e("option",{key:s,value:s},s))
+        ),
+        e("select",{className:"fsel",style:{width:"auto",fontSize:"11px",padding:"4px 9px"},value:fCat,onChange:ev=>setFC(ev.target.value)},
+          e("option",{value:"all"},"All Categories"),CATS.map(c=>e("option",{key:c.id,value:c.id},c.icon+" "+c.label))
+        )
+      )
+    ),
+    filtered.length===0
+      ?e("div",{className:"empty"},e("div",{className:"empty-icon"},"✅"),e("div",null,"All clear in this view!"))
+      :e("div",{className:"card",style:{padding:0,overflow:"auto"}},
+          e("table",{className:"gtable"},
+            e("thead",null,e("tr",null,["Issue","Location","Category","Severity","ETA / Status","Votes","Response"].map(h=>e("th",{key:h},h)))),
+            e("tbody",null,filtered.map(issue=>{
+              const c=CMAP[issue.category]||{icon:"⚠️",color:"#CBD5E1"};
+              const sCol={HIGH:"var(--dan)",MEDIUM:"var(--warn)",LOW:"var(--ok)"};
+              const eta=etaStatus(issue);
+              return e("tr",{key:issue.id,style:{background:issue.escalated&&issue.status!=="resolved"?"rgba(167,139,250,.05)":""}},
+                e("td",null,
+                  e("div",{style:{fontWeight:600,fontSize:"12px",maxWidth:"160px"}},
+                    issue.escalated&&issue.status!=="resolved"&&e("span",{style:{fontSize:"10px",color:"#a78bfa",fontWeight:700,marginRight:"4px"}},"🚨"),
+                    issue.title
+                  ),
+                  e("div",{style:{fontSize:"10px",color:issue.govtResponse?"var(--acc2)":"var(--tx3)",marginTop:"2px"}},issue.govtResponse?"💬 Responded":"No response yet")
+                ),
+                e("td",{style:{fontSize:"11px",color:"var(--tx2)",maxWidth:"120px"}},issue.location),
+                e("td",null,c.icon," ",c.label),
+                e("td",null,e("span",{style:{color:sCol[issue.severity],fontWeight:700,fontSize:"12px"}},issue.severity)),
+                e("td",null,
+                  e("div",null,
+                    e("span",{style:{fontSize:"11px",fontWeight:600,color:eta.color}},eta.label),
+                    e("div",{style:{fontSize:"10px",color:"var(--tx3)",marginTop:"1px"}},"ETA: ",issue.etaLabel||"—")
+                  ),
+                  e("select",{className:"status-sel",style:{marginTop:"4px"},value:issue.status,onChange:ev=>onStatusChange(issue.id,ev.target.value)},
+                    e("option",{value:"open"},"🔴 Open"),e("option",{value:"progress"},"🟡 In Progress"),e("option",{value:"resolved"},"🟢 Resolved")
+                  )
+                ),
+                e("td",{style:{color:"var(--warn)",fontWeight:700}},issue.votes>=25?"🔥 "+issue.votes:issue.votes),
+                e("td",null,e(RespCell,{issue,onAddResponse}))
+              );
+            }))
+          )
+        )
+  );
+}
+
+function RespCell({issue,onAddResponse}){
+  const e=React.createElement;
+  const [open,setOpen]=useState(false);
+  const [txt,setTxt]=useState(issue.govtResponse||"");
+  return e("div",null,
+    e("button",{className:"btn btn-sm btn-g",onClick:()=>setOpen(!open)},open?"Cancel":"💬 Respond"),
+    open&&e("div",{style:{marginTop:"5px"}},
+      e("textarea",{className:"fta",style:{minHeight:"46px",fontSize:"11px"},placeholder:"Write response...",value:txt,onChange:ev=>setTxt(ev.target.value)}),
+      e("button",{className:"btn btn-v btn-sm btn-fw",style:{marginTop:"4px"},onClick:()=>{onAddResponse(issue.id,txt);setOpen(false);}},"Send")
+    )
+  );
+}
+
+// ── GOVT LOGIN (simple, legacy) ────────────────────────────────
+function GovtLogin({onLogin,onBack,theme,toggleTheme}){
+  const e=React.createElement;
+  const [email,setEmail]=useState("");
+  const [pass,setPass]=useState("");
+  const [err,setErr]=useState("");
+  function tryLogin(){
+    const acc=GOVT_ACCOUNTS[email];
+    if(!acc||acc.pass!==pass){setErr("Invalid credentials. Use demo accounts below.");return;}
+    onLogin({email,...acc});
+  }
+  return e("div",{className:"auth-wrap"},
+    e("div",{style:{position:"absolute",top:"16px",right:"20px"}},
+      e("button",{className:"theme-toggle",onClick:toggleTheme},theme==="dark"?"☀️":"🌙")
+    ),
+    e("div",{className:"auth-box"},
+      e("div",{style:{fontSize:"15px",fontWeight:700,marginBottom:"24px",display:"flex",alignItems:"center",gap:"7px"}},
+        e("div",{style:{width:"8px",height:"8px",borderRadius:"50%",background:"var(--acc2)"}}),
+        "Civitas.Ai · Govt Portal"
+      ),
+      e("div",{className:"auth-title"},"🏛️ Officer Login"),
+      e("div",{className:"auth-sub"},"Sign in with your government credentials"),
+      e("div",{className:"fg"},e("label",{className:"fl"},"Official Email"),e("input",{className:"fi",type:"email",placeholder:"officer@dept.gov.in",value:email,onChange:ev=>setEmail(ev.target.value)})),
+      e("div",{className:"fg"},e("label",{className:"fl"},"Password"),e("input",{className:"fi",type:"password",placeholder:"••••••••",value:pass,onChange:ev=>setPass(ev.target.value),onKeyDown:ev=>ev.key==="Enter"&&tryLogin()})),
+      err&&e("div",{style:{fontSize:"12px",color:"var(--dan)",marginBottom:"9px"}},err),
+      e("button",{className:"btn btn-v btn-fw",onClick:tryLogin},"Sign In"),
+      e("div",{className:"auth-demo"},
+        e("div",{style:{fontWeight:700,marginBottom:"4px",fontSize:"11px"}},"🧪 Demo Accounts:"),
+        DEMO_GOVT.slice(0,5).map((u,i)=>e("div",{key:i,style:{fontSize:"11px",marginBottom:"3px"}},
+          e("b",null,u.dept+(u.isHead?" (Head)":"")),": ",u.email," · ",u.password
+        ))
+      ),
+      e("button",{className:"btn btn-g btn-fw",style:{marginTop:"11px"},onClick:onBack},"← Back to Citizen Portal")
+    )
+  );
+}
+
+// ── LANDING ───────────────────────────────────────────────────
+function Landing({onCitizen,onGovt,theme,toggleTheme}){
+  const e=React.createElement;
+  return e("div",{className:"land"},
+    e("div",{className:"land-top"},
+      e("button",{className:"theme-toggle",onClick:toggleTheme},theme==="dark"?"☀️":"🌙")
+    ),
+    e("div",{className:"land-logo"},e("div",{className:"logo-dot"}),"Civitas.Ai"),
+    e("div",{className:"land-eyebrow"},e("div",{className:"edot"}),"🤖 Powered by Google Gemini AI · Google AI Studio"),
+    e("h1",{className:"land-title"},"Citizens report. ",e("br"),e("em",null,"Govt fixes.")),
+    e("p",{className:"land-sub"},"An AI-powered civic platform where citizens report issues with photos, Gemini analyzes them instantly, and government officers see, prioritize, and resolve them."),
+    e("div",{className:"portal-cards"},
+      e("div",{className:"pcard pcard-c",onClick:onCitizen},
+        e("div",{className:"pcard-icon"},"👤"),
+        e("div",{className:"pcard-title"},"I'm a Citizen"),
+        e("div",{className:"pcard-sub"},"Report, upvote, and track civic issues in your area."),
+        e("div",{className:"pcard-feats"},
+          ["AI photo analysis (Gemini)","Multi-photo upload","Upvote & track priority","View only issues in your area","See govt responses live"].map((f,i)=>e("div",{key:i,className:"pcard-feat"},f))
+        ),
+        e("button",{className:"pcard-btn"},"Enter Citizen Portal →")
+      ),
+      e("div",{className:"pcard pcard-g",onClick:onGovt},
+        e("div",{className:"pcard-icon"},"🏛️"),
+        e("div",{className:"pcard-title"},"I'm a Govt Officer"),
+        e("div",{className:"pcard-sub"},"See all issues in your jurisdiction, sorted by priority."),
+        e("div",{className:"pcard-feats"},
+          ["Action queue sorted by severity + votes","Update status in one click","Send official responses","Filter by category / severity"].map((f,i)=>e("div",{key:i,className:"pcard-feat"},f))
+        ),
+        e("button",{className:"pcard-btn",style:{background:"var(--acc2)"}},"Enter Govt Portal →")
+      )
+    )
+  );
+}
+
+// ── SETTINGS ──────────────────────────────────────────────────
+function SettingsPage({apiKey,setApiKey,fbCfg,setFbCfg,fbOk,onConnectFB,onClearData}){
+  const e=React.createElement;
+  const [gk,setGk]=useState(apiKey);
+  const [fb,setFb]=useState(fbCfg);
+  const [sg,setSg]=useState(false);
+  const [sf,setSf]=useState(false);
+  const FBKEYS=["apiKey","authDomain","projectId","storageBucket","messagingSenderId","appId"];
+  return e("div",{style:{maxWidth:540}},
+    e("div",{className:"ptitle"},"⚙️ Settings"),
+    e("div",{className:"psub"},"Connect AI and database for a fully live demo"),
+    e("div",{className:"cfgsec"},
+      e("div",{className:"cfgtitle"},"🤖 Google AI Studio — Gemini API",e("div",{className:"gbadge",style:{marginLeft:"auto"}},e("div",{className:"gbadge-dot"}),"Core AI Tool")),
+      e("div",{className:"cfgsub"},"1. Go to makersuite.google.com → Get API key (free)\n2. Paste below — stays in your browser\n3. Without key: realistic mock AI responses shown"),
+      e("div",{className:"fg"},e("label",{className:"fl"},"Gemini API Key"),e("input",{className:"fi",type:"password",placeholder:"AIzaSy...",value:gk,onChange:ev=>{setGk(ev.target.value);setSg(false)}})),
+      e("button",{className:"btn btn-p",onClick:()=>{setApiKey(gk);setSg(true);}},sg?"✅ Saved":"Save Key")
+    ),
+    e("div",{className:"cfgsec"},
+      e("div",{className:"cfgtitle"},"🔥 Firebase",e("span",{style:{fontSize:"11px",fontWeight:600,color:fbOk?"var(--ok)":"var(--dan)",marginLeft:"auto"}},fbOk?"● Connected":"● Not Connected")),
+      e("div",{className:"cfgsub"},"1. console.firebase.google.com → New project\n2. Enable Firestore + Storage\n3. Project Settings → Add Web App → copy config\n4. Firestore rules: allow read, write: if true;\n5. Storage rules: allow read, write: if true;"),
+      FBKEYS.map(k=>e("div",{key:k,className:"fg"},e("label",{className:"fl"},k),e("input",{className:"fi",type:k==="apiKey"?"password":"text",placeholder:`Firebase ${k}`,value:fb[k]||"",onChange:ev=>{setFb(f=>({...f,[k]:ev.target.value}));setSf(false)}}))),
+      e("div",{style:{display:"flex",gap:"8px",flexWrap:"wrap"}},
+        e("button",{className:"btn btn-p",onClick:()=>{setFbCfg(fb);setSf(true);onConnectFB(fb);}},sf?"✅ Saved":"Connect Firebase"),
+        fbOk&&e("span",{style:{fontSize:"12px",color:"var(--ok)",alignSelf:"center"}},"✅ Syncing to cloud")
+      )
+    ),
+    e("div",{className:"cfgsec",style:{background:"rgba(248,113,113,.05)",borderColor:"rgba(248,113,113,.2)"}},
+      e("div",{className:"cfgtitle"},"🗑️ Data"),
+      e("div",{className:"cfgsub"},"Issues persist in localStorage across reloads. Clear only to reset demo data."),
+      e("button",{className:"btn btn-dan",onClick:onClearData},"Clear all local data")
+    )
+  );
+}
+
+// ── APP ───────────────────────────────────────────────────────
+function App(){
+  const e=React.createElement;
+  const {theme,toggle:toggleTheme}=useTheme();
+  // screen: landing | citizenlogin | citizenregister | govtlogin | govtregister | citizen | govt
+  const [screen,setScreen]=useState(()=>{
+    const u=getLocalUser();
+    if(u&&u.role==="citizen")return"citizen";
+    if(u&&u.role==="govt")return"govt";
+    return"landing";
+  });
+  const [currentUser,setCurrentUser]=useState(()=>getLocalUser());
+  const [govtOfficer,setGovtOfficer]=useState(()=>{const u=getLocalUser();return(u&&u.role==="govt")?u:null;});
+  const [issues,setIssues]=useState(()=>loadIssues()||SEED);
+  const [userState,setUserState]=useState(()=>{
+    const u=getLocalUser();
+    if(u&&u.location&&u.location.state)return u.location;
+    return loadUserState()||null;
+  });
+  const [tab,setTab]=useState(()=>{const u=getLocalUser();return(u&&u.role==="govt")?"queue":"home";});
+  const [voted,setVoted]=useState(()=>{try{return JSON.parse(localStorage.getItem("civitas_voted_v1")||"{}");}catch(e){return{};}});
+  const [modal,setModal]=useState(false);
+  const [apiKey] = useState(GEMINI_API_KEY);
+  const [fbCfg] = useState(FIREBASE_CONFIG);
+  const [fbOk,setFbOk]=useState(false);
+  const {ts,add:toast}=useToast();
+
+  // When user enters citizen portal, ask for their location if not set
+  const [showLocSetup,setShowLocSetup]=useState(false);
+  const [setupState,setSetupSt]=useState("");
+  const [setupDistrict,setSetupDi]=useState("");
+  const [setupArea,setSetupAr]=useState("");
+
+  useEffect(()=>{ saveIssues(issues); },[issues]);
+
+  // Auto-check escalations on mount only — seed data has fixed timestamps
+  useEffect(()=>{
+    setIssues(prev=>{
+      const now=Date.now();
+      let changed=false;
+      const updated=prev.map(i=>{
+        if(i.status==="resolved") return i;
+        if(i.etaTs && now>i.etaTs && !i.escalated){changed=true;return{...i,escalated:true};}
+        return i;
+      });
+      if(changed){saveIssues(updated);return updated;}
+      return prev;
+    });
+  },[]);
+
+  // Filter issues to user's area
+  const myIssues = userState
+    ? issues.filter(i=>i.state===userState.state)
+    : issues;
+
+  async function connectFB(cfg){
+    if(!cfg.projectId){toast("Fill all Firebase fields","error");return;}
+    toast("Connecting…","info");
+    const ok=await initFB(cfg);
+    if(ok){
+      await initFirebaseAuth(cfg);
+      setFbOk(true); toast("✅ Firebase connected!","success");
+      const cloud=await fbLoadAll();
+      if(cloud?.length){setIssues(p=>{const ids=new Set(p.map(i=>i.id));const merged=[...p,...cloud.filter(i=>!ids.has(i.id))];saveIssues(merged);return merged;});}
+    }else toast("Firebase failed. Check config.","error");
+  }
+
+  // Auto-set fbOk when Firebase initializes
+  useEffect(()=>{
+    if(window._firebaseInitPromise){
+      window._firebaseInitPromise.then(ok=>{
+        if(ok){
+          setFbOk(true);
+          // Load cloud issues
+          fbLoadAll().then(cloud=>{
+            if(cloud?.length){
+              setIssues(p=>{
+                const ids=new Set(p.map(i=>i.id));
+                const merged=[...p,...cloud.filter(i=>!ids.has(i.id))];
+                saveIssues(merged);
+                return merged;
+              });
+            }
+          }).catch(()=>{});
+        }
+      });
+    }
+  },[]);
+
+  function vote(id){
+    const alreadyVoted=voted[id];
+    const newVoted={...voted};
+    if(alreadyVoted){delete newVoted[id];}else{newVoted[id]=true;}
+    setVoted(newVoted);
+    localStorage.setItem("civitas_voted_v1",JSON.stringify(newVoted));
+    const delta=alreadyVoted?-1:1;
+    setIssues(is=>{
+      const u=is.map(i=>i.id===id?{...i,votes:Math.max(0,i.votes+delta)}:i);
+      saveIssues(u);
+      // Firebase update uses the freshly computed value, not the stale closure
+      if(fbOk){const updated=u.find(i=>i.id===id);if(updated)fbUpdate(id,{votes:updated.votes});}
+      return u;
+    });
+    toast(alreadyVoted?"Vote removed":"Vote counted!",alreadyVoted?"info":"success");
+  }
+
+  async function submit(data,b64s){
+    const etaDays=DEPT_ETA_DAYS[data.dept]||7;
+    const now=Date.now();
+    const etaTs=now+etaDays*24*3600*1000;
+    const ni={id:"r"+Date.now(),...data,imageUrls:[],reportedBy:currentUser?.id||null,
+      reportedTs:now,etaTs,etaDays,escalated:false,etaLabel:new Date(etaTs).toISOString().split("T")[0]};
+    const updated=[ni,...issues]; setIssues(updated); saveIssues(updated);
+    toast("🚀 Report submitted! ETA: "+ni.etaLabel,"success"); setTab("home");
+    if(fbOk){
+      try{const saved=await fbSave(ni,b64s);if(saved){setIssues(is=>{const u=is.map(i=>i.id===ni.id?{...i,id:saved.id,imageUrls:saved.imageUrls}:i);saveIssues(u);return u;});toast("✅ Photos saved to Firebase!","success");}}catch(err){toast("Firebase save failed","error");}
+    }
+  }
+
+  function statusChange(id,ns){
+    setIssues(is=>{const u=is.map(i=>i.id===id?{...i,status:ns,resolvedAt:ns==="resolved"?new Date().toISOString().split("T")[0]:i.resolvedAt}:i);saveIssues(u);return u;});
+    if(fbOk)fbUpdate(id,{status:ns});
+    toast("Status updated","success");
+  }
+
+  function addResponse(id,text){
+    if(!text.trim())return;
+    setIssues(is=>{const u=is.map(i=>i.id===id?{...i,govtResponse:text}:i);saveIssues(u);return u;});
+    if(fbOk)fbUpdate(id,{govtResponse:text});
+    toast("Response sent!","success");
+  }
+
+  function clearData(){if(!confirm("Clear all local data?"))return;localStorage.removeItem(LS_KEY);setIssues(SEED);toast("Cleared","info");}
+
+  function enterCitizen(){
+    setScreen("citizenlogin");
+  }
+
+  function saveLocation(){
+    if(!setupState||!setupDistrict||!setupArea){toast("Please select State, District and Area","error");return;}
+    const st={state:setupState,district:setupDistrict,area:setupArea};
+    setUserState(st); saveUserState(st); setShowLocSetup(false);
+    toast("📍 Location set to "+setupArea,"success");
+  }
+
+  // ── AUTH ROUTING ─────────────────────────────────────
+  function handleCitizenDone(user){
+    setCurrentUser(user);
+    setTab("home");
+    if(!user.location)setShowLocSetup(true);
+    setScreen("citizen");
+  }
+  function handleGovtDone(user){
+    setCurrentUser(user);setGovtOfficer(user);setTab("queue");setScreen("govt");
+  }
+  async function handleSignOut(){
+    clearLocalUser();setCurrentUser(null);setGovtOfficer(null);
+    if(_fbAuthReady)try{await fbSignOut();}catch(ex){}
+    setScreen("landing");
+  }
+
+  if(screen==="landing")return e(React.Fragment,null,
+    e(Landing,{onCitizen:()=>setScreen("citizenlogin"),onGovt:()=>setScreen("govtlogin"),theme,toggleTheme}),
+    e(Toaster,{ts})
+  );
+  if(screen==="citizenlogin")return e(React.Fragment,null,
+    e(CitizenLogin,{onDone:handleCitizenDone,onSwitchRegister:()=>setScreen("citizenregister")}),
+    e(Toaster,{ts})
+  );
+  if(screen==="citizenregister")return e(React.Fragment,null,
+    e(CitizenRegister,{onDone:handleCitizenDone,onSwitchLogin:()=>setScreen("citizenlogin")}),
+    e(Toaster,{ts})
+  );
+  if(screen==="govtlogin")return e(React.Fragment,null,
+    e(GovtLoginPage,{onDone:handleGovtDone,onSwitchRegister:()=>setScreen("govtregister"),onBack:()=>setScreen("landing")}),
+    e(Toaster,{ts})
+  );
+  if(screen==="govtregister")return e(React.Fragment,null,
+    e(GovtRegister,{onDone:handleGovtDone,onSwitchLogin:()=>setScreen("govtlogin")}),
+    e(Toaster,{ts})
+  );
+
+  // ── GOVT
+  if(screen==="govt"){
+    const GTABS=[{id:"queue",l:"🔴 Action Queue"},{id:"analytics",l:"📊 Analytics"},{id:"map",l:"🗺️ Map"},{id:"all",l:"📋 All Issues"}];
+    return e(React.Fragment,null,
+      e("nav",null,
+        e("div",{className:"nav-logo"},e("div",{className:"logo-dot",style:{background:"var(--acc2)"}}),e("span",{style:{color:"var(--acc2)"}},"Civitas.Ai")),
+        e("div",{className:"nav-tabs"},GTABS.map(t=>e("button",{key:t.id,className:`ntab ntab-g ${tab===t.id?"on":""}`,onClick:()=>setTab(t.id)},t.l))),
+        e("div",{className:"nav-right"},
+          e("button",{className:"theme-toggle",onClick:toggleTheme},theme==="dark"?"☀️":"🌙"),
+          e("span",{className:"npbadge badge-g"},"🏛️ "+(govtOfficer?.dept||"Govt")),
+          currentUser&&e(ProfileMenu,{user:currentUser,onSignOut:handleSignOut,onSettings:()=>{}})
+        )
+      ),
+      tab==="queue"&&e(GovtDashboard,{issues,onStatusChange:statusChange,onAddResponse:addResponse,officer:govtOfficer}),
+      tab==="analytics"&&e(AnalyticsDashboard,{issues,officer:govtOfficer}),
+      tab==="map"&&e("div",{className:"page"},e("div",{className:"ptitle"},"🗺️ Issue Map"),e(MapView,{issues,filterState:govtOfficer?.state})),
+      tab==="all"&&e("div",{className:"page"},e("div",{className:"ptitle"},"📋 All Issues"),
+        e("div",{className:"igrid"},issues.filter(i=>govtOfficer?.state==="all"||i.state===govtOfficer?.state).map(i=>e(ICard,{key:i.id,issue:i,onVote:vote,voted:voted[i.id],isGovt:true,onStatusChange:statusChange,onAddResponse:addResponse})))
+      ),
+      e(Toaster,{ts})
+    );
+  }
+
+  // ── CITIZEN
+  const CTABS=[{id:"home",l:"🏠 Home"},{id:"issues",l:"📋 Issues"},{id:"mine",l:"📌 My Reports"},{id:"map",l:"🗺️ Map"}];
+  const openCount=myIssues.filter(i=>i.status==="open").length;
+
+  return e(React.Fragment,null,
+    e("nav",null,
+      e("div",{className:"nav-logo"},e("div",{className:"logo-dot"}),"Civitas.Ai"),
+      e("div",{className:"nav-tabs"},CTABS.map(t=>e("button",{key:t.id,className:`ntab ${tab===t.id?"on":""}`,onClick:()=>setTab(t.id)},t.l))),
+      e("div",{className:"nav-right"},
+        e("button",{className:"theme-toggle",onClick:toggleTheme},theme==="dark"?"☀️":"🌙"),
+        userState&&e("button",{className:"btn btn-g btn-sm",style:{fontSize:"11px"},onClick:()=>setShowLocSetup(true)},"📍 "+(userState.area||userState.state)),
+        e("div",{className:"gbadge"},e("div",{className:"gbadge-dot"}),"Gemini"),
+        e("button",{className:"btn btn-p btn-sm",onClick:()=>setModal(true)},"+ Report"),
+        currentUser&&e(ProfileMenu,{user:currentUser,onSignOut:handleSignOut,onSettings:()=>{}})
+      )
+    ),
+
+    // Location setup modal
+    showLocSetup&&e("div",{className:"overlay"},
+      e("div",{className:"modal"},
+        e("div",{className:"mhdr"},
+          e("div",{className:"mtitle"},"📍 Set Your Location"),
+          userState&&e("button",{className:"mclose",onClick:()=>setShowLocSetup(false)},"✕")
+        ),
+        e("p",{style:{fontSize:"13px",color:"var(--tx2)",marginBottom:"14px"}},"We show you only issues from your area. Set your location once — you can change it anytime."),
+        e(LocationPicker,{state:setupState,setState:setSetupSt,district:setupDistrict,setDistrict:setSetupDi,area:setupArea,setArea:setSetupAr}),
+        e("button",{className:"btn btn-p btn-fw",style:{marginTop:"13px"},disabled:!setupState||!setupDistrict||!setupArea,onClick:saveLocation},"✅ Set My Location"),
+        e("button",{className:"btn btn-g btn-fw",style:{marginTop:"7px",fontSize:"12px"},onClick:()=>setShowLocSetup(false)},"Skip — Browse all issues →")
+      )
+    ),
+
+    // HOME — two column: nearby + state-wide
+    tab==="home"&&e("div",null,
+      e("div",{className:"hero"},
+        e("div",{className:"hglow"}),
+        e("div",{style:{display:"inline-flex",alignItems:"center",gap:"6px",fontSize:"11px",color:"#a78bfa",background:"rgba(167,139,250,.1)",border:"1px solid rgba(167,139,250,.2)",padding:"4px 12px",borderRadius:"20px",marginBottom:"14px",fontWeight:600}},
+          e("div",{className:"gbadge-dot"}),"🤖 Powered by Google AI Studio · Gemini 1.5 Flash"
+        ),
+        e("h1",{className:"htitle"},"Issues in ",e("em",null,userState?userState.state:"your city")),
+        e("p",{className:"hsub"},userState?`Showing issues in ${userState.state} · ${openCount} open`:"Set your location to see local issues"),
+        e("div",{style:{display:"flex",gap:"9px",justifyContent:"center",flexWrap:"wrap",marginBottom:"32px"}},
+          e("button",{className:"btn btn-p",style:{fontSize:"14px",padding:"10px 20px"},onClick:()=>setModal(true)},"📸 Report an Issue"),
+          e("button",{className:"btn btn-g",style:{fontSize:"14px",padding:"10px 20px"},onClick:()=>setTab("map")},"🗺️ View Map")
+        ),
+        e("div",{className:"hstats"},
+          [{n:myIssues.length,l:"In Your Area"},{n:openCount,l:"Open"},{n:myIssues.filter(i=>i.status==="resolved").length,l:"Resolved"},{n:myIssues.filter(i=>i.severity==="HIGH"&&i.status!=="resolved").length,l:"🔴 Urgent"}]
+            .map((s,i)=>e("div",{key:i,className:"stat2"},e("div",{className:"snum"},s.n),e("div",{className:"slbl"},s.l)))
+        )
+      ),
+      e(HomeFeed,{issues,myIssues,userState,onVote:vote,voted,onReport:()=>setModal(true)})
+    ),
+
+    // ISSUES
+    tab==="issues"&&e(IssuesTab,{issues:myIssues,onVote:vote,voted,userState,onChangeLocation:()=>setShowLocSetup(true)}),
+
+    // MY REPORTS
+    tab==="mine"&&e("div",{className:"page"},
+      e("div",{className:"ptitle"},"📌 My Reports"),
+      e("div",{style:{fontSize:"12px",color:"var(--tx2)",marginBottom:"16px"}},"Issues you have submitted"),
+      (()=>{
+        const mine=myIssues.filter(i=>i.reportedBy===currentUser?.id);
+        if(mine.length===0)return e("div",{className:"empty"},e("div",{className:"empty-icon"},"📌"),e("div",null,"You haven't submitted any reports yet"),e("button",{className:"btn btn-p",style:{marginTop:"12px"},onClick:()=>setModal(true)},"Report your first issue"));
+        return e("div",{className:"igrid"},mine.map(i=>e(ICard,{key:i.id,issue:i,onVote:vote,voted:voted[i.id]})));
+      })()
+    ),
+
+    // MAP
+    tab==="map"&&e("div",{className:"page"},
+      e("div",{className:"ptitle"},"🗺️ "+(userState?"Issues in "+userState.state:"All India")),
+      e("div",{className:"psub"},"Showing "+(userState?"issues in "+userState.state+". ":"all India. ")+"Pin size = vote count."),
+      e(MapView,{issues:myIssues,filterState:userState?.state})
+    ),
+
+    modal&&e(ReportModal,{
+      onClose:()=>setModal(false),onSubmit:submit,onUpvote:vote,allIssues:issues,apiKey,
+      defaultState:userState?.state,defaultDistrict:userState?.district,defaultArea:userState?.area
+    }),
+
+    e(ChatBot,{issues:myIssues,userState,apiKey}),
+    e(Toaster,{ts})
+  );
+}
+
+
+// ══════════════════════════════════════════════════════════
+// AUTH SYSTEM
+// ══════════════════════════════════════════════════════════
+
+// ── Firebase Auth ──────────────────────────────────────────
+let _auth = null;
+let _fbAuthReady = false;
+
+async function initFirebaseAuth(cfg) {
+  try {
+    const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+    const { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+            signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged,
+            updateProfile } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
+    const apps = getApps();
+    const app = apps.length ? apps[0] : initializeApp(cfg);
+    _auth = getAuth(app);
+    _fbAuthReady = true;
+    window._fbAuth = { createUserWithEmailAndPassword, signInWithEmailAndPassword,
+      signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, updateProfile };
+    return true;
+  } catch(e) { console.error("Auth init:", e); return false; }
+}
+
+async function fbSignUp(email, pass, name) {
+  if (!_fbAuthReady || !window._fbAuth) throw new Error("Firebase not initialized.");
+  const { createUserWithEmailAndPassword, updateProfile } = window._fbAuth;
+  const cred = await createUserWithEmailAndPassword(_auth, email, pass);
+  await updateProfile(cred.user, { displayName: name });
+  return cred.user;
+}
+
+async function fbSignIn(email, pass) {
+  if (!_fbAuthReady || !window._fbAuth) throw new Error("Firebase not initialized.");
+  const { signInWithEmailAndPassword } = window._fbAuth;
+  const cred = await signInWithEmailAndPassword(_auth, email, pass);
+  return cred.user;
+}
+
+async function fbGoogleSignIn() {
+  if (!_fbAuthReady || !window._fbAuth) throw new Error("Firebase not initialized.");
+  const { signInWithPopup, GoogleAuthProvider } = window._fbAuth;
+  const provider = new GoogleAuthProvider();
+  const cred = await signInWithPopup(_auth, provider);
+  return cred.user;
+}
+
+async function fbSignOut() {
+  if (!_fbAuthReady || !window._fbAuth) return;
+  await window._fbAuth.signOut(_auth);
+}
+
+// ── Reverse Geocode via Nominatim (OpenStreetMap, free) ────
+async function reverseGeocode(lat, lng) {
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
+      { headers: { "Accept-Language": "en" } });
+    const d = await r.json();
+    const addr = d.address || {};
+    // Map Nominatim fields to our structure
+    const state = addr.state || "";
+    // Find matching state in our LOC_TREE
+    const matchedState = Object.keys(LOC_TREE).find(s =>
+      state.toLowerCase().includes(s.toLowerCase()) ||
+      s.toLowerCase().includes(state.toLowerCase().split(" ")[0])
+    ) || "";
+    const district = addr.county || addr.city_district || addr.suburb || addr.city || "";
+    const area = addr.suburb || addr.neighbourhood || addr.quarter || addr.village || addr.town || addr.city || "";
+    // Try to match district to our tree
+    let matchedDistrict = "", matchedArea = "";
+    if (matchedState && LOC_TREE[matchedState]) {
+      const dists = Object.keys(LOC_TREE[matchedState]);
+      matchedDistrict = dists.find(d =>
+        district.toLowerCase().includes(d.toLowerCase().split(" ")[0]) ||
+        d.toLowerCase().includes(district.toLowerCase().split(" ")[0])
+      ) || dists[0];
+      if (matchedDistrict) {
+        const areas = LOC_TREE[matchedState][matchedDistrict] || [];
+        matchedArea = areas.find(a =>
+          area.toLowerCase().includes(a.toLowerCase().split(" ")[0]) ||
+          a.toLowerCase().includes(area.toLowerCase().split(" ")[0])
+        ) || areas[0] || "";
+      }
+    }
+    return {
+      raw: `${area}, ${district}, ${state}`,
+      state: matchedState,
+      district: matchedDistrict,
+      area: matchedArea,
+      lat, lng
+    };
+  } catch(e) {
+    console.warn("Geocode failed:", e);
+    return null;
+  }
+}
+
+// ── Detect location ────────────────────────────────────────
+function detectLocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) { reject(new Error("Geolocation not supported")); return; }
+    navigator.geolocation.getCurrentPosition(
+      async pos => {
+        const result = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+        if (result) resolve(result);
+        else reject(new Error("Could not determine area from your location"));
+      },
+      err => reject(new Error("Location access denied. Please allow location or select manually.")),
+      { timeout: 10000 }
+    );
+  });
+}
+
+// ── Gemini ID scanning ─────────────────────────────────────
+async function scanGovtID(b64, apiKey) {
+  if (!apiKey) {
+    await new Promise(r => setTimeout(r, 1500));
+    return { dept: null, name: null, empId: null, confidence: 0,
+      raw: "Demo mode — add Gemini API key in Settings to enable live ID scanning" };
+  }
+  const prompt = `You are analyzing a government employee ID card / official document from India.
+Extract the following information if visible:
+- Employee name
+- Employee/Staff ID number
+- Department name (e.g. "Public Works Department", "Electricity Board", "Water Supply", "Municipal Corporation", "Health Department", "Police", "Revenue Department")
+- Designation/role
+
+Map the department to one of these categories:
+- "Roads Department" (PWD, CPWD, road works, highways)
+- "Electricity Board" (BESCOM, MSEDCL, DISCOM, electricity, power)  
+- "Water Supply Board" (BWSSB, Jal Board, water supply, sewage, drainage)
+- "Municipal Sanitation" (garbage, solid waste, sanitation, cleanliness)
+- "Horticulture Dept" (parks, gardens, trees, horticulture)
+- "Municipal Corporation" (general municipal, civic, BBMP, MCD, BMC)
+- "Revenue Department" (land, revenue, encroachment)
+- "Health Department" (health, hospital, medical)
+- "Other Government" (anything else)
+
+Return ONLY valid JSON (no markdown):
+{"name":"<employee name or null>","empId":"<ID number or null>","dept":"<mapped department category>","confidence":<0-100>,"notes":"<brief note about what you detected>"}`;
+  try {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [
+          { inline_data: { mime_type: "image/jpeg", data: b64 } },
+          { text: prompt }
+        ]}], generationConfig: { temperature: 0.1 } }) });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error.message);
+    const raw = d?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+    return JSON.parse(raw.replace(/```json|```/g, "").trim());
+  } catch(e) {
+    return { dept: null, name: null, empId: null, confidence: 0, raw: e.message };
+  }
+}
+
+// ── LOCAL MOCK AUTH (works without Firebase) ───────────────
+const LS_USERS = "civitas_users_v1";
+const LS_CURUSER = "civitas_currentuser_v1";
+
+function getLocalUsers() { try { return JSON.parse(localStorage.getItem(LS_USERS) || "[]"); } catch(e) { return []; } }
+function saveLocalUsers(u) { localStorage.setItem(LS_USERS, JSON.stringify(u)); }
+function getLocalUser() { try { return JSON.parse(localStorage.getItem(LS_CURUSER) || "null"); } catch(e) { return null; } }
+function setLocalUser(u) { localStorage.setItem(LS_CURUSER, JSON.stringify(u)); }
+function clearLocalUser() { localStorage.removeItem(LS_CURUSER); }
+
+function mockSignUp(data) {
+  const users = getLocalUsers();
+  if (users.find(u => u.email === data.email)) throw new Error("Email already registered.");
+  const user = { ...data, id: "u" + Date.now(), createdAt: new Date().toISOString() };
+  users.push(user);
+  saveLocalUsers(users);
+  setLocalUser(user);
+  return user;
+}
+
+function mockSignIn(email, pass) {
+  const users = getLocalUsers();
+  const user = users.find(u => u.email === email && u.password === pass);
+  if (!user) throw new Error("Invalid email or password. Try a demo account below.");
+  setLocalUser(user);
+  return user;
+}
+
+// ══════════════════════════════════════════════════════════
+// AUTH UI COMPONENTS
+// ══════════════════════════════════════════════════════════
+
+// ── Location Detector Component ────────────────────────────
+function LocationDetector({ onDetected, onManual }) {
+  const e = React.createElement;
+  const [status, setStatus] = useState("idle"); // idle | loading | done | error
+  const [result, setResult] = useState(null);
+  const [errMsg, setErrMsg] = useState("");
+
+  async function detect() {
+    setStatus("loading"); setErrMsg("");
+    try {
+      const loc = await detectLocation();
+      setResult(loc); setStatus("done");
+      onDetected(loc);
+    } catch(err) {
+      setStatus("error"); setErrMsg(err.message);
+    }
+  }
+
+  if (status === "done" && result) return e("div", null,
+    e("div", { className: "loc-detected" },
+      "📍", e("div", null,
+        e("div", { style: { fontWeight: 600 } }, result.state + (result.district ? " › " + result.district : "") + (result.area ? " › " + result.area : "")),
+        e("div", { style: { fontSize: "11px", opacity: .8 } }, result.raw)
+      ),
+      e("button", { className: "btn btn-g btn-sm", style: { marginLeft: "auto", fontSize: "11px" }, onClick: () => { setStatus("idle"); setResult(null); onManual(); } }, "Change")
+    )
+  );
+
+  return e("div", null,
+    e("button", { className: "loc-detect-btn", onClick: detect, disabled: status === "loading" },
+      status === "loading" ? e("span", { className: "spinner spinner-dark" }) : "📍",
+      status === "loading" ? "Detecting your location…" : "Auto-detect my location"
+    ),
+    status === "error" && e("div", { className: "err-msg" }, "⚠️ ", errMsg),
+    e("div", { style: { textAlign: "center", margin: "10px 0", fontSize: "12px", color: "var(--tx3)" } }, "— or select manually —"),
+  );
+}
+
+// ── Citizen Register ───────────────────────────────────────
+function CitizenRegister({ onDone, onSwitchLogin, fbConfig }) {
+  const e = React.createElement;
+  const [step, setStep] = useState(1);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [idType, setIdType] = useState("aadhaar");
+  const [idNum, setIdNum] = useState("");
+  const [locMode, setLocMode] = useState("auto"); // auto | manual
+  const [locState, setLocState] = useState("");
+  const [locDistrict, setLocDistrict] = useState("");
+  const [locArea, setLocArea] = useState("");
+  const [detectedLoc, setDetectedLoc] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+
+  async function handleGoogleSignIn() {
+    setLoading(true); setErr("");
+    try {
+      // Wait for Firebase to finish initializing
+      if(window._firebaseInitPromise) await window._firebaseInitPromise;
+      if (_fbAuthReady) {
+        const fbUser = await fbGoogleSignIn();
+        const userData = { id: fbUser.uid, name: fbUser.displayName, email: fbUser.email,
+          avatar: fbUser.photoURL, role: "citizen", provider: "google",
+          location: detectedLoc || { state: locState, district: locDistrict, area: locArea } };
+        setLocalUser(userData);
+        onDone(userData);
+      } else {
+        setErr("Firebase Auth not ready. Make sure you're running on localhost or a live URL (not file://).");
+      }
+    } catch(ex) {
+      if(ex.message.includes("popup-blocked")) setErr("Popup blocked — please allow popups for this site.");
+      else if(ex.message.includes("cancelled")) setErr("Sign-in cancelled.");
+      else if(ex.message.includes("unauthorized-domain")) setErr("Domain not authorized. Add this URL to Firebase Console → Authentication → Authorized domains.");
+      else setErr(ex.message);
+    }
+    setLoading(false);
+  }
+
+  async function submitStep1() {
+    if (!name.trim()) { setErr("Name is required"); return; }
+    if (!email.includes("@")) { setErr("Enter a valid email"); return; }
+    if (pass.length < 6) { setErr("Password must be at least 6 characters"); return; }
+    setErr(""); setStep(2);
+  }
+
+  async function submitFinal() {
+    if (!idNum.trim()) { setErr("ID number is required"); return; }
+    const finalLoc = detectedLoc || { state: locState, district: locDistrict, area: locArea };
+    if (!finalLoc.state) { setErr("Please set your location"); return; }
+    setLoading(true); setErr("");
+    try {
+      const userData = {
+        id: "u" + Date.now(), name, email, phone,
+        idType, idNum: idNum.slice(-4).padStart(idNum.length, "*"), // mask
+        role: "citizen", provider: "email",
+        location: finalLoc,
+        createdAt: new Date().toISOString()
+      };
+      if (_fbAuthReady) {
+        const fbUser = await fbSignUp(email, pass, name);
+        userData.id = fbUser.uid;
+        // Save extra profile to Firestore if available
+        if (_db && window._fb) {
+          const { doc } = window._fb;
+          try { await window._fb.updateDoc(window._fb.doc(_db, "users", fbUser.uid), userData); } catch(ex) {
+            // doc might not exist yet, use addDoc
+            if (window._fb.addDoc) await window._fb.addDoc(window._fb.collection(_db, "users"), {...userData, uid: fbUser.uid});
+          }
+        }
+      } else {
+        // Mock auth
+        const mockUser = mockSignUp({ ...userData, password: pass });
+        userData.id = mockUser.id;
+      }
+      setLocalUser(userData);
+      onDone(userData);
+    } catch(ex) { setErr(ex.message || String(ex)); }
+    setLoading(false);
+  }
+
+  const districts = locState ? Object.keys(LOC_TREE[locState] || {}) : [];
+  const areas = (locState && locDistrict) ? (LOC_TREE[locState]?.[locDistrict] || []) : [];
+
+  return e("div", { className: "auth-page" },
+    // LEFT
+    e("div", { className: "auth-left" },
+      e("div", { className: "auth-brand" }, e("div", { className: "auth-brand-dot" }), "Civitas.Ai"),
+
+      // Step indicator
+      e("div", { className: "step-nav" },
+        [{ n: 1, l: "Account" }, { n: 2, l: "Identity & Location" }].map((s, i, arr) =>
+          e(React.Fragment, { key: s.n },
+            e("div", { className: `step-circle ${step > s.n ? "done" : step === s.n ? "active" : "idle"}` },
+              step > s.n ? "✓" : s.n),
+            e("div", { style: { fontSize: "12px", color: step >= s.n ? "var(--tx)" : "var(--tx3)" } }, s.l),
+            i < arr.length - 1 && e("div", { className: `step-line ${step > s.n ? "done" : ""}` })
+          )
+        )
+      ),
+
+      e("div", { className: "auth-form-title" }, step === 1 ? "Create account" : "Verify identity"),
+      e("div", { className: "auth-form-sub" }, step === 1 ? "Join thousands reporting civic issues in your city" : "Help us verify you're a real citizen"),
+
+      // STEP 1
+      step === 1 && e("div", null,
+        e("button", { className: "google-btn", onClick: handleGoogleSignIn, disabled: loading },
+          e("svg", { className: "google-icon", viewBox: "0 0 24 24" },
+            e("path", { d: "M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z", fill: "#4285F4" }),
+            e("path", { d: "M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z", fill: "#34A853" }),
+            e("path", { d: "M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z", fill: "#FBBC05" }),
+            e("path", { d: "M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z", fill: "#EA4335" })
+          ),
+          "Continue with Google"
+        ),
+        e("div", { className: "auth-divider" }, "or register with email"),
+        e("div", { className: "fg" },
+          e("label", { className: "fl" }, "Full Name"),
+          e("div", { className: "input-group" },
+            e("span", { className: "input-icon" }, "👤"),
+            e("input", { className: "fi fi-icon", placeholder: "Rahul Sharma", value: name, onChange: ev => setName(ev.target.value) })
+          )
+        ),
+        e("div", { className: "fg" },
+          e("label", { className: "fl" }, "Email Address"),
+          e("div", { className: "input-group" },
+            e("span", { className: "input-icon" }, "✉️"),
+            e("input", { className: "fi fi-icon", type: "email", placeholder: "rahul@gmail.com", value: email, onChange: ev => setEmail(ev.target.value) })
+          )
+        ),
+        e("div", { className: "fg" },
+          e("label", { className: "fl" }, "Password"),
+          e("div", { className: "input-group" },
+            e("span", { className: "input-icon" }, "🔒"),
+            e("input", { className: "fi fi-icon", type: showPass ? "text" : "password", placeholder: "At least 6 characters", value: pass, onChange: ev => setPass(ev.target.value), onKeyDown: ev => ev.key === "Enter" && submitStep1() }),
+            e("button", { className: "input-eye", onClick: () => setShowPass(!showPass) }, showPass ? "🙈" : "👁️")
+          )
+        ),
+        e("div", { className: "fg" },
+          e("label", { className: "fl" }, "Phone Number (optional)"),
+          e("div", { className: "input-group" },
+            e("span", { className: "input-icon" }, "📱"),
+            e("input", { className: "fi fi-icon", type: "tel", placeholder: "+91 98765 43210", value: phone, onChange: ev => setPhone(ev.target.value) })
+          )
+        ),
+        err && e("div", { className: "err-msg" }, "⚠️ ", err),
+        e("button", { className: "btn btn-p btn-fw", style: { padding: "12px" }, onClick: submitStep1, disabled: loading },
+          loading ? e("span", { className: "spinner" }) : "Continue →"
+        ),
+        e("div", { className: "auth-switch" }, "Already have an account? ", e("button", { onClick: onSwitchLogin }, "Sign in"))
+      ),
+
+      // STEP 2
+      step === 2 && e("div", null,
+        e("div", { className: "fg" },
+          e("label", { className: "fl" }, "ID Type"),
+          e("select", { className: "fsel", value: idType, onChange: ev => setIdType(ev.target.value) },
+            e("option", { value: "aadhaar" }, "Aadhaar Card"),
+            e("option", { value: "voter" }, "Voter ID"),
+            e("option", { value: "pan" }, "PAN Card"),
+            e("option", { value: "passport" }, "Passport"),
+            e("option", { value: "driving" }, "Driving Licence")
+          )
+        ),
+        e("div", { className: "fg" },
+          e("label", { className: "fl" }, idType === "aadhaar" ? "Aadhaar Number (last 4 digits stored)" : "ID Number"),
+          e("div", { className: "input-group" },
+            e("span", { className: "input-icon" }, "🪪"),
+            e("input", { className: "fi fi-icon", placeholder: idType === "aadhaar" ? "XXXX XXXX XXXX" : "Enter ID number", value: idNum, onChange: ev => setIdNum(ev.target.value) })
+          )
+        ),
+        e("div", { className: "fg" },
+          e("label", { className: "fl" }, "Your Location"),
+          e(LocationDetector, {
+            onDetected: loc => setDetectedLoc(loc),
+            onManual: () => setLocMode("manual")
+          }),
+          (locMode === "manual" || !detectedLoc) && e("div", null,
+            e("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" } },
+              e("div", { className: "fg", style: { marginBottom: 0 } },
+                e("label", { className: "fl" }, "State"),
+                e("select", { className: "fsel", value: locState, onChange: ev => { setLocState(ev.target.value); setLocDistrict(""); setLocArea(""); } },
+                  e("option", { value: "" }, "State"),
+                  Object.keys(LOC_TREE).map(s => e("option", { key: s, value: s }, s))
+                )
+              ),
+              e("div", { className: "fg", style: { marginBottom: 0 } },
+                e("label", { className: "fl" }, "District"),
+                e("select", { className: "fsel", value: locDistrict, onChange: ev => { setLocDistrict(ev.target.value); setLocArea(""); }, disabled: !locState },
+                  e("option", { value: "" }, "District"),
+                  districts.map(d => e("option", { key: d, value: d }, d))
+                )
+              ),
+              e("div", { className: "fg", style: { marginBottom: 0 } },
+                e("label", { className: "fl" }, "Area"),
+                e("select", { className: "fsel", value: locArea, onChange: ev => setLocArea(ev.target.value), disabled: !locDistrict },
+                  e("option", { value: "" }, "Area"),
+                  areas.map(a => e("option", { key: a, value: a }, a))
+                )
+              )
+            )
+          )
+        ),
+        err && e("div", { className: "err-msg" }, "⚠️ ", err),
+        e("div", { style: { display: "flex", gap: "8px", marginTop: "4px" } },
+          e("button", { className: "btn btn-g", onClick: () => setStep(1) }, "← Back"),
+          e("button", { className: "btn btn-p", style: { flex: 1, padding: "11px" }, onClick: submitFinal, disabled: loading },
+            loading ? e("span", { className: "spinner" }) : "Create Account ✓"
+          )
+        ),
+        e("div", { style: { fontSize: "11px", color: "var(--tx3)", marginTop: "10px", textAlign: "center" } },
+          "🔒 Your ID number is masked and stored securely. We only store the last 4 digits."
+        )
+      )
+    ),
+
+    // RIGHT PANEL
+    e("div", { className: "auth-right" },
+      e("div", { className: "auth-feature-card" },
+        e("div", { className: "auth-feature-title" }, "Fix issues. Build community."),
+        e("div", { className: "auth-feature-sub" }, "Join citizens making their cities better through AI-powered civic reporting."),
+        [
+          { icon: "🤖", bg: "rgba(34,211,238,.12)", label: "AI-Powered Analysis", sub: "Gemini instantly categorizes and routes your report" },
+          { icon: "🗺️", bg: "rgba(129,140,248,.12)", label: "Local Issues Only", sub: "See only what matters in your area" },
+          { icon: "🏛️", bg: "rgba(52,211,153,.12)", label: "Direct Govt Connect", sub: "Reports go straight to the right department" },
+          { icon: "📊", bg: "rgba(251,191,36,.12)", label: "Track Resolution", sub: "Real-time status updates from authorities" },
+        ].map((f, i) => e("div", { key: i, className: "auth-feat-row" },
+          e("div", { className: "auth-feat-icon", style: { background: f.bg } }, f.icon),
+          e("div", null,
+            e("div", { className: "auth-feat-label" }, f.label),
+            e("div", { className: "auth-feat-sub" }, f.sub)
+          )
+        ))
+      )
+    )
+  );
+}
+
+
+// ── Firebase Status Indicator ──────────────────────────────
+function FirebaseStatus() {
+  const e = React.createElement;
+  const [status, setStatus] = useState("connecting"); // connecting | connected | error
+
+  useEffect(() => {
+    if(window._firebaseInitPromise) {
+      window._firebaseInitPromise.then(ok => {
+        setStatus(ok ? "connected" : "error");
+      }).catch(() => setStatus("error"));
+    } else {
+      setStatus("error");
+    }
+  }, []);
+
+  const configs = {
+    connecting: { bg: "rgba(251,191,36,.08)", border: "rgba(251,191,36,.25)", color: "var(--warn)", icon: "⏳", text: "Connecting to Firebase…" },
+    connected:  { bg: "rgba(52,211,153,.08)", border: "rgba(52,211,153,.25)", color: "var(--ok)",   icon: "✅", text: "Firebase connected — data syncs to cloud" },
+    error:      { bg: "rgba(248,113,113,.08)", border: "rgba(248,113,113,.25)", color: "var(--dan)", icon: "⚠️", text: "Running in local mode — data saved to browser only. Open via Live Server for full features." },
+  };
+  const cfg = configs[status];
+
+  return e("div", { style: { background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: "9px", padding: "9px 12px", marginBottom: "12px", fontSize: "12px", color: cfg.color, display: "flex", alignItems: "center", gap: "7px" } },
+    cfg.icon, cfg.text
+  );
+}
+
+// ── Citizen Login ──────────────────────────────────────────
+function CitizenLogin({ onDone, onSwitchRegister }) {
+  const e = React.createElement;
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+
+  async function handleLogin() {
+    if (!email || !pass) { setErr("Please fill all fields"); return; }
+    setLoading(true); setErr("");
+    try {
+      let user;
+      // Try local/demo first (works without Firebase)
+      const localUsers = getLocalUsers();
+      const localMatch = localUsers.find(u => u.email === email && u.password === pass);
+      if (localMatch) {
+        user = localMatch;
+      } else if (_fbAuthReady) {
+        const fbUser = await fbSignIn(email, pass);
+        user = { id: fbUser.uid, name: fbUser.displayName || email.split("@")[0],
+          email: fbUser.email, avatar: fbUser.photoURL, role: "citizen", provider: "firebase" };
+        const saved = getLocalUser();
+        if (saved && saved.id === fbUser.uid) user = { ...user, ...saved };
+      } else {
+        throw new Error("Invalid email or password. Try a demo account below.");
+      }
+      if (user.role === "govt") { setErr("This is a govt account. Use the Government portal instead."); setLoading(false); return; }
+      setLocalUser(user);
+      onDone(user);
+    } catch(ex) { setErr(ex.message || "Login failed"); }
+    setLoading(false);
+  }
+
+  async function handleGoogle() {
+    setLoading(true); setErr("");
+    try {
+      if(window._firebaseInitPromise) await window._firebaseInitPromise;
+      if (!_fbAuthReady) {
+        setErr("Google Sign-In requires the app to run on localhost or a live URL — not file://. Try Live Server in VS Code.");
+        setLoading(false); return;
+      }
+      const fbUser = await fbGoogleSignIn();
+      const user = { id: fbUser.uid, name: fbUser.displayName, email: fbUser.email,
+        avatar: fbUser.photoURL, role: "citizen", provider: "google",
+        location: getLocalUser()?.location || null };
+      setLocalUser(user);
+      onDone(user);
+    } catch(ex) {
+      if(ex.message.includes("unauthorized-domain")) setErr("Add this URL to Firebase Console → Authentication → Authorized domains.");
+      else if(ex.message.includes("popup-blocked")) setErr("Allow popups for this site and try again.");
+      else setErr(ex.message);
+    }
+    setLoading(false);
+  }
+
+  return e("div", { className: "auth-page" },
+    e("div", { className: "auth-left" },
+      e("div", { className: "auth-brand" }, e("div", { className: "auth-brand-dot" }), "Civitas.Ai"),
+      e("div", { className: "auth-form-title" }, "Welcome back 👋"),
+      e("div", { className: "auth-form-sub" }, "Sign in to report and track civic issues in your area"),
+      e("button", { className: "google-btn", onClick: handleGoogle, disabled: loading },
+        e("svg", { className: "google-icon", viewBox: "0 0 24 24" },
+          e("path", { d: "M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z", fill: "#4285F4" }),
+          e("path", { d: "M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z", fill: "#34A853" }),
+          e("path", { d: "M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z", fill: "#FBBC05" }),
+          e("path", { d: "M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z", fill: "#EA4335" })
+        ),
+        "Continue with Google"
+      ),
+      e("div", { className: "auth-divider" }, "or sign in with email"),
+      e("div", { className: "fg" },
+        e("label", { className: "fl" }, "Email"),
+        e("div", { className: "input-group" },
+          e("span", { className: "input-icon" }, "✉️"),
+          e("input", { className: "fi fi-icon", type: "email", placeholder: "your@email.com", value: email, onChange: ev => setEmail(ev.target.value) })
+        )
+      ),
+      e("div", { className: "fg" },
+        e("label", { className: "fl" }, "Password"),
+        e("div", { className: "input-group" },
+          e("span", { className: "input-icon" }, "🔒"),
+          e("input", { className: "fi fi-icon", type: showPass ? "text" : "password", placeholder: "••••••••", value: pass, onChange: ev => setPass(ev.target.value), onKeyDown: ev => ev.key === "Enter" && handleLogin() }),
+          e("button", { className: "input-eye", onClick: () => setShowPass(!showPass) }, showPass ? "🙈" : "👁️")
+        )
+      ),
+      err && e("div", { className: "err-msg" }, "⚠️ ", err),
+      e("button", { className: "btn btn-p btn-fw", style: { padding: "12px" }, onClick: handleLogin, disabled: loading },
+        loading ? e("span", { className: "spinner" }) : "Sign In →"
+      ),
+      e(FirebaseStatus, null),
+      e("div", { style: { background: "rgba(34,211,238,.06)", border: "1px solid rgba(34,211,238,.15)", borderRadius: "11px", padding: "12px 14px", marginTop: "14px" } },
+        e("div", { style: { fontSize: "11px", fontWeight: 700, color: "var(--acc)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: ".06em" } }, "🧪 Demo Accounts — click to auto-fill"),
+        DEMO_CITIZENS.map((u, i) => e("div", { key: i,
+          style: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderBottom: i < DEMO_CITIZENS.length-1 ? "1px solid rgba(34,211,238,.1)" : "none" },
+        },
+          e("div", null,
+            e("div", { style: { fontSize: "12px", fontWeight: 600 } }, u.name),
+            e("div", { style: { fontSize: "11px", color: "var(--tx2)" } }, u.email, " · 📍 ", u.location.area)
+          ),
+          e("button", {
+            className: "btn btn-p btn-sm",
+            style: { fontSize: "11px", padding: "4px 10px" },
+            onClick: () => { setEmail(u.email); setPass(u.password); }
+          }, "Use →")
+        ))
+      ),
+      e("div", { className: "auth-switch" }, "New here? ", e("button", { onClick: onSwitchRegister }, "Create account"))
+    ),
+    e("div", { className: "auth-right" },
+      e("div", { className: "auth-feature-card" },
+        e("div", { className: "auth-feature-title" }, "Fix issues. Build community."),
+        e("div", { className: "auth-feature-sub" }, "Your reports reach the right government department instantly — powered by Gemini AI."),
+        [
+          { icon: "🤖", bg: "rgba(34,211,238,.12)", label: "Gemini AI Analysis", sub: "Auto-categorizes every photo you upload" },
+          { icon: "📸", bg: "rgba(129,140,248,.12)", label: "Multi-photo upload", sub: "Upload up to 5 photos per issue" },
+          { icon: "🔥", bg: "rgba(251,191,36,.12)", label: "Smart deduplication", sub: "Prevents spam, amplifies real issues" },
+          { icon: "🏛️", bg: "rgba(52,211,153,.12)", label: "Govt portal", sub: "Officers see & respond to your reports" },
+        ].map((f, i) => e("div", { key: i, className: "auth-feat-row" },
+          e("div", { className: "auth-feat-icon", style: { background: f.bg } }, f.icon),
+          e("div", null, e("div", { className: "auth-feat-label" }, f.label), e("div", { className: "auth-feat-sub" }, f.sub))
+        ))
+      )
+    )
+  );
+}
+
+// ── Govt Register ──────────────────────────────────────────
+const DEPT_LIST = [
+  "Roads Department", "Electricity Board", "Water Supply Board",
+  "Municipal Sanitation", "Horticulture Dept", "Municipal Corporation",
+  "Revenue Department", "Health Department", "Police Department", "Other Government"
+];
+
+// ── DEMO ACCOUNTS ─────────────────────────────────────────
+const DEMO_CITIZENS = [
+  {name:"Arjun Sharma", email:"arjun@demo.com", password:"demo123", phone:"+91 98765 43210", idType:"aadhaar", idNum:"1234", location:{state:"Delhi",district:"South Delhi",area:"Lajpat Nagar"}, role:"citizen"},
+  {name:"Priya Patel",  email:"priya@demo.com", password:"demo123", phone:"+91 87654 32109", idType:"voter",   idNum:"XYZ7", location:{state:"Karnataka",district:"Bengaluru Urban",area:"Indiranagar"}, role:"citizen"},
+  {name:"Rahul Gupta",  email:"rahul@demo.com", password:"demo123", phone:"+91 76543 21098", idType:"pan",     idNum:"3456", location:{state:"Maharashtra",district:"Mumbai Suburban",area:"Andheri West"}, role:"citizen"},
+];
+const DEMO_GOVT_SEED = [
+  {name:"Vikram Singh",   email:"vikram@roads.gov.in",    password:"govt123", empId:"EMP-RD-2201", dept:"Roads Department",       state:"Delhi",         role:"govt"},
+  {name:"Meena Iyer",     email:"meena@electric.gov.in",  password:"govt123", empId:"EMP-EB-0934", dept:"Electricity Board",      state:"Karnataka",     role:"govt"},
+  {name:"Ravi Nair",      email:"ravi@water.gov.in",      password:"govt123", empId:"EMP-WS-1105", dept:"Water Supply Board",     state:"Maharashtra",   role:"govt"},
+  {name:"Sunita Rao",     email:"sunita@sanitation.gov.in",password:"govt123",empId:"EMP-MS-3312", dept:"Municipal Sanitation",   state:"Delhi",         role:"govt"},
+  {name:"Anil Mehta",     email:"anil@mcd.gov.in",        password:"govt123", empId:"EMP-MC-5567", dept:"Municipal Corporation",  state:"Delhi",         role:"govt"},
+];
+
+function seedDemoAccounts() {
+  const existing = getLocalUsers();
+  const allEmails = new Set(existing.map(u=>u.email));
+  const toAdd = [...DEMO_CITIZENS, ...DEMO_GOVT_SEED].filter(u=>!allEmails.has(u.email))
+    .map(u=>({...u, id:"demo_"+u.email, idNum: u.idNum||"demo", createdAt:new Date().toISOString()}));
+  if(toAdd.length > 0) saveLocalUsers([...existing, ...toAdd]);
+}
+// Seed on load
+seedDemoAccounts();
+
+// ── FIREBASE CONFIG ───────────────────────────────────────────
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCFaaN35ZYvnaiHvuGHJnpS64LEWu4M5a0",
+  authDomain: "fix-my-city-fb0f0.firebaseapp.com",
+  projectId: "fix-my-city-fb0f0",
+  storageBucket: "fix-my-city-fb0f0.firebasestorage.app",
+  messagingSenderId: "392361442981",
+  appId: "1:392361442981:web:265aab985682872f4a574c"
+};
+
+// ── GEMINI API KEY ────────────────────────────────────────────
+const GEMINI_API_KEY = "AIzaSyBf9THIypirKcPGP1xo2INntgPYzRmp_Lc";
+
+// Auto-initialize Firebase with pre-configured config
+window._firebaseInitPromise = (async function autoInitFirebase() {
+  try {
+    const ok = await initFB(FIREBASE_CONFIG);
+    if (ok) {
+      console.log("✅ Firestore connected");
+      const authOk = await initFirebaseAuth(FIREBASE_CONFIG);
+      if(authOk) console.log("✅ Firebase Auth ready");
+      return true;
+    }
+    return false;
+  } catch(e) {
+    console.warn("Firebase auto-init failed, using local mode:", e);
+    return false;
+  }
+})();
+
+
+
+function GovtRegister({ onDone, onSwitchLogin }) {
+  const e = React.createElement;
+  const [step, setStep] = useState(1);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
+  const [empId, setEmpId] = useState("");
+  const [state, setState] = useState("");
+  const [idImg, setIdImg] = useState(null);
+  const [idB64, setIdB64] = useState(null);
+  const [scanning, setScanning] = useState(false);
+  const [scanResult, setScanResult] = useState(null);
+  const [dept, setDept] = useState("");
+  const [idType, setIdType] = useState("employee_id");
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const [drag, setDrag] = useState(false);
+  const apiKey = GEMINI_API_KEY;
+
+  function handleIdFile(file) {
+    if (!file) return;
+    const r = new FileReader();
+    r.onload = async ev => {
+      setIdImg(ev.target.result);
+      const b64 = ev.target.result.split(",")[1];
+      setIdB64(b64);
+      setScanning(true); setScanResult(null);
+      const result = await scanGovtID(b64, apiKey);
+      setScanResult(result);
+      if (result.dept) setDept(result.dept);
+      if (result.name && !name) setName(result.name);
+      if (result.empId && !empId) setEmpId(result.empId);
+      setScanning(false);
+    };
+    r.readAsDataURL(file);
+  }
+
+  function step1Valid() {
+    if (!name.trim()) { setErr("Name required"); return false; }
+    if (!email.includes("@") || !email.includes(".")) { setErr("Enter a valid email address"); return false; }
+    if (pass.length < 6) { setErr("Password must be 6+ characters"); return false; }
+    if (!state) { setErr("Select your state/city"); return false; }
+    return true;
+  }
+
+  async function submitFinal() {
+    if (!dept) { setErr("Department is required"); return; }
+    if (!idImg) { setErr("Please upload your ID proof"); return; }
+    setLoading(true); setErr("");
+    try {
+      const userData = {
+        id: "g" + Date.now(), name, email, empId, role: "govt",
+        dept, state, provider: "email",
+        idVerified: (scanResult?.confidence || 0) > 50,
+        scanConfidence: scanResult?.confidence || 0,
+        createdAt: new Date().toISOString()
+      };
+      if (_fbAuthReady) {
+        const fbUser = await fbSignUp(email, pass, name);
+        userData.id = fbUser.uid;
+      } else {
+        const mockUser = mockSignUp({ ...userData, password: pass });
+        userData.id = mockUser.id;
+      }
+      setLocalUser(userData);
+      onDone(userData);
+    } catch(ex) { setErr(ex.message); }
+    setLoading(false);
+  }
+
+  return e("div", { className: "auth-page" },
+    e("div", { className: "auth-left" },
+      e("div", { className: "auth-brand" },
+        e("div", { className: "auth-brand-dot", style: { background: "var(--acc2)" } }),
+        "Civitas.Ai · Government Portal"
+      ),
+      e("div", { className: "step-nav" },
+        [{ n: 1, l: "Account" }, { n: 2, l: "ID Verification" }].map((s, i, arr) =>
+          e(React.Fragment, { key: s.n },
+            e("div", { className: `step-circle ${step > s.n ? "done" : step === s.n ? "active" : "idle"}` }, step > s.n ? "✓" : s.n),
+            e("div", { style: { fontSize: "12px", color: step >= s.n ? "var(--tx)" : "var(--tx3)" } }, s.l),
+            i < arr.length - 1 && e("div", { className: `step-line ${step > s.n ? "done" : ""}` })
+          )
+        )
+      ),
+      e("div", { className: "auth-form-title" }, step === 1 ? "🏛️ Officer Account" : "🪪 ID Verification"),
+      e("div", { className: "auth-form-sub" }, step === 1 ? "Register your official account to manage civic issues" : "Upload your government ID — Gemini AI will auto-detect your department"),
+
+      step === 1 && e("div", null,
+        e("div", { className: "fg" },
+          e("label", { className: "fl" }, "Full Name"),
+          e("div", { className: "input-group" }, e("span", { className: "input-icon" }, "👤"),
+            e("input", { className: "fi fi-icon", placeholder: "Officer Full Name", value: name, onChange: ev => setName(ev.target.value) }))
+        ),
+        e("div", { className: "fg" },
+          e("label", { className: "fl" }, "Official Email"),
+          e("div", { className: "input-group" }, e("span", { className: "input-icon" }, "✉️"),
+            e("input", { className: "fi fi-icon", type: "email", placeholder: "officer@dept.gov.in", value: email, onChange: ev => setEmail(ev.target.value) }))
+        ),
+        e("div", { className: "fg" },
+          e("label", { className: "fl" }, "Password"),
+          e("div", { className: "input-group" }, e("span", { className: "input-icon" }, "🔒"),
+            e("input", { className: "fi fi-icon", type: "password", placeholder: "Min 6 characters", value: pass, onChange: ev => setPass(ev.target.value) }))
+        ),
+        e("div", { className: "fg" },
+          e("label", { className: "fl" }, "Employee ID"),
+          e("div", { className: "input-group" }, e("span", { className: "input-icon" }, "🪪"),
+            e("input", { className: "fi fi-icon", placeholder: "EMP-XXXX-XXXX", value: empId, onChange: ev => setEmpId(ev.target.value) }))
+        ),
+        e("div", { className: "fg" },
+          e("label", { className: "fl" }, "State / City"),
+          e("select", { className: "fsel", value: state, onChange: ev => setState(ev.target.value) },
+            e("option", { value: "" }, "Select your jurisdiction state"),
+            Object.keys(LOC_TREE).map(s => e("option", { key: s, value: s }, s)),
+            e("option", { value: "all" }, "All India (Central Govt)")
+          )
+        ),
+        err && e("div", { className: "err-msg" }, "⚠️ ", err),
+        e("button", { className: "btn btn-v btn-fw", style: { padding: "12px" }, onClick: () => { if (step1Valid()) { setErr(""); setStep(2); } } }, "Next: Upload ID →"),
+        e("div", { className: "auth-switch" }, "Already registered? ", e("button", { onClick: onSwitchLogin }, "Sign in"))
+      ),
+
+      step === 2 && e("div", null,
+        e("div", { className: "fg" },
+          e("label", { className: "fl" }, "ID Document Type"),
+          e("select", { className: "fsel", value: idType, onChange: ev => setIdType(ev.target.value) },
+            e("option", { value: "employee_id" }, "Government Employee ID Card"),
+            e("option", { value: "appointment" }, "Official Appointment Letter"),
+            e("option", { value: "photo_id" }, "Govt-issued Photo ID")
+          )
+        ),
+        !idImg && e("div", { className: `id-upload-zone ${drag ? "drag" : ""}`,
+          onDragOver: ev => { ev.preventDefault(); setDrag(true); },
+          onDragLeave: () => setDrag(false),
+          onDrop: ev => { ev.preventDefault(); setDrag(false); handleIdFile(ev.dataTransfer.files[0]); } },
+          e("input", { type: "file", accept: "image/*", onChange: ev => handleIdFile(ev.target.files[0]) }),
+          e("div", { style: { fontSize: "32px", marginBottom: "8px" } }, "🪪"),
+          e("div", { style: { fontSize: "13px", fontWeight: 600, marginBottom: "3px" } }, "Upload your ID document"),
+          e("div", { style: { fontSize: "11px", color: "var(--tx2)" } }, "Gemini AI will auto-extract your department · JPG, PNG accepted")
+        ),
+        idImg && e("div", null,
+          e("img", { src: idImg, className: "id-preview" }),
+          scanning && e("div", { className: "ai-scanning" },
+            e("div", { className: "ai-scanning-title" }, e("div", { className: "aipulse" }), "Gemini scanning your ID…"),
+            e("div", { className: "ai-scanning-sub" }, "Extracting department, name, employee ID…")
+          ),
+          !scanning && scanResult && e("div", null,
+            scanResult.dept
+              ? e("div", { className: "dept-badge" }, "✅ Department detected: ", e("b", null, " " + scanResult.dept), " (", scanResult.confidence + "% confidence)")
+              : e("div", { style: { fontSize: "12px", color: "var(--warn)", margin: "6px 0" } }, "⚠️ Could not auto-detect department from ID. Please select manually below."),
+            scanResult.notes && e("div", { style: { fontSize: "11px", color: "var(--tx2)", marginTop: "5px" } }, "AI note: ", scanResult.notes)
+          ),
+          e("button", { className: "btn btn-g btn-sm", style: { marginTop: "6px" }, onClick: () => { setIdImg(null); setIdB64(null); setScanResult(null); } }, "Re-upload")
+        ),
+        e("div", { className: "fg", style: { marginTop: "10px" } },
+          e("label", { className: "fl" }, scanResult?.dept ? "Department (auto-detected — change if wrong)" : "Department"),
+          e("select", { className: "fsel", value: dept, onChange: ev => setDept(ev.target.value) },
+            e("option", { value: "" }, "Select department"),
+            DEPT_LIST.map(d => e("option", { key: d, value: d }, d))
+          )
+        ),
+        err && e("div", { className: "err-msg" }, "⚠️ ", err),
+        e("div", { style: { display: "flex", gap: "8px" } },
+          e("button", { className: "btn btn-g", onClick: () => setStep(1) }, "← Back"),
+          e("button", { className: "btn btn-v", style: { flex: 1, padding: "11px" }, onClick: submitFinal, disabled: loading || scanning },
+            loading ? e("span", { className: "spinner" }) : "Complete Registration ✓"
+          )
+        ),
+        e("div", { style: { fontSize: "11px", color: "var(--tx3)", marginTop: "10px", textAlign: "center" } },
+          "🔒 Your ID is used for verification only and is not stored publicly."
+        )
+      )
+    ),
+    e("div", { className: "auth-right" },
+      e("div", { className: "auth-feature-card" },
+        e("div", { className: "auth-feature-title" }, "Government Officer Portal"),
+        e("div", { className: "auth-feature-sub" }, "See only the issues relevant to your department. Respond, update status, and track resolution."),
+        [
+          { icon: "🎯", bg: "rgba(129,140,248,.12)", label: "Department-filtered view", sub: "Only see issues assigned to your dept" },
+          { icon: "🚨", bg: "rgba(248,113,113,.12)", label: "Priority queue", sub: "Issues sorted by severity + community votes" },
+          { icon: "💬", bg: "rgba(52,211,153,.12)", label: "Respond to citizens", sub: "Your responses appear on citizen reports" },
+          { icon: "📊", bg: "rgba(251,191,36,.12)", label: "Resolution dashboard", sub: "Track your team's performance metrics" },
+        ].map((f, i) => e("div", { key: i, className: "auth-feat-row" },
+          e("div", { className: "auth-feat-icon", style: { background: f.bg } }, f.icon),
+          e("div", null, e("div", { className: "auth-feat-label" }, f.label), e("div", { className: "auth-feat-sub" }, f.sub))
+        ))
+      )
+    )
+  );
+}
+
+// ── Govt Login ─────────────────────────────────────────────
+function GovtLoginPage({ onDone, onSwitchRegister, onBack }) {
+  const e = React.createElement;
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+
+  async function handleLogin() {
+    if (!email || !pass) { setErr("Fill all fields"); return; }
+    setLoading(true); setErr("");
+    try {
+      let user;
+      // Try hardcoded demo govt accounts first
+      const demoAcc = GOVT_ACCOUNTS[email];
+      if (demoAcc && demoAcc.pass === pass) {
+        user = { id: "demo_"+email, email, role: "govt", ...demoAcc };
+      } else {
+        // Try local users
+        const localUsers = getLocalUsers();
+        const localMatch = localUsers.find(u => u.email === email && u.password === pass);
+        if (localMatch) {
+          user = localMatch;
+        } else if (_fbAuthReady) {
+          const fbUser = await fbSignIn(email, pass);
+          const saved = getLocalUser();
+          user = saved && saved.id === fbUser.uid ? saved : { id: fbUser.uid, name: fbUser.displayName, email: fbUser.email, role: "govt" };
+        } else {
+          throw new Error("Invalid credentials. Try a demo account below.");
+        }
+      }
+      if (user.role !== "govt") { setErr("This is a citizen account. Use the citizen portal instead."); setLoading(false); return; }
+      if (!user.dept) { setErr("No department found. Please register as a govt officer first."); setLoading(false); return; }
+      setLocalUser(user);
+      onDone(user);
+    } catch(ex) { setErr(ex.message); }
+    setLoading(false);
+  }
+
+  return e("div", { className: "auth-page" },
+    e("div", { className: "auth-left" },
+      e("div", { className: "auth-brand" },
+        e("div", { className: "auth-brand-dot", style: { background: "var(--acc2)" } }),
+        "Civitas.Ai · Government Portal"
+      ),
+      e("div", { className: "auth-form-title" }, "🏛️ Officer Sign In"),
+      e("div", { className: "auth-form-sub" }, "Sign in to manage your department's issues"),
+      e("div", { className: "fg" },
+        e("label", { className: "fl" }, "Official Email"),
+        e("div", { className: "input-group" }, e("span", { className: "input-icon" }, "✉️"),
+          e("input", { className: "fi fi-icon", type: "email", placeholder: "officer@dept.gov.in", value: email, onChange: ev => setEmail(ev.target.value) }))
+      ),
+      e("div", { className: "fg" },
+        e("label", { className: "fl" }, "Password"),
+        e("div", { className: "input-group" }, e("span", { className: "input-icon" }, "🔒"),
+          e("input", { className: "fi fi-icon", type: showPass ? "text" : "password", placeholder: "••••••••", value: pass, onChange: ev => setPass(ev.target.value), onKeyDown: ev => ev.key === "Enter" && handleLogin() }),
+          e("button", { className: "input-eye", onClick: () => setShowPass(!showPass) }, showPass ? "🙈" : "👁️"))
+      ),
+      err && e("div", { className: "err-msg" }, "⚠️ ", err),
+      e("button", { className: "btn btn-v btn-fw", style: { padding: "12px" }, onClick: handleLogin, disabled: loading },
+        loading ? e("span", { className: "spinner" }) : "Sign In →"
+      ),
+      e("div", { style: { background: "rgba(129,140,248,.06)", border: "1px solid rgba(129,140,248,.15)", borderRadius: "11px", padding: "12px 14px", marginTop: "14px" } },
+        e("div", { style: { fontSize: "11px", fontWeight: 700, color: "var(--acc2)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: ".06em" } }, "🏛️ Demo Govt Accounts — click to auto-fill"),
+        DEMO_GOVT.map((u, i) => e("div", { key: i,
+          style: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderBottom: i < DEMO_GOVT.length-1 ? "1px solid rgba(129,140,248,.1)" : "none" },
+        },
+          e("div", null,
+            e("div", { style: { fontSize: "12px", fontWeight: 600 } }, u.name),
+            e("div", { style: { fontSize: "11px", color: "var(--tx2)" } }, u.dept, " · ", u.state)
+          ),
+          e("button", {
+            className: "btn btn-v btn-sm",
+            style: { fontSize: "11px", padding: "4px 10px" },
+            onClick: () => { setEmail(u.email); setPass(u.password); }
+          }, "Use →")
+        ))
+      ),
+      e("div", { className: "auth-switch" }, "No account? ", e("button", { onClick: onSwitchRegister }, "Register as Officer")),
+      e("div", { className: "auth-switch", style: { marginTop: "8px" } },
+        e("button", { onClick: onBack, style: { color: "var(--tx2)" } }, "← Back to citizen portal")
+      )
+    ),
+    e("div", { className: "auth-right" },
+      e("div", { className: "auth-feature-card" },
+        e("div", { className: "auth-feature-title" }, "Your department. Your dashboard."),
+        e("div", { className: "auth-feature-sub" }, "Each officer sees only issues relevant to their department — no noise, just actionable work."),
+        DEPT_LIST.slice(0, 5).map((d, i) => e("div", { key: i, className: "auth-feat-row" },
+          e("div", { className: "auth-feat-icon", style: { background: "rgba(129,140,248,.1)", fontSize: "16px" } },
+            ["🚧","⚡","💧","🗑️","🌳"][i]
+          ),
+          e("div", null, e("div", { className: "auth-feat-label" }, d), e("div", { className: "auth-feat-sub" }, "Issues routed automatically by Gemini AI"))
+        ))
+      )
+    )
+  );
+}
+
+// ── Profile Menu in Nav ────────────────────────────────────
+function ProfileMenu({ user, onSignOut, onSettings }) {
+  const e = React.createElement;
+  const [open, setOpen] = useState(false);
+  const initials = (user.name || "U").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+  return e("div", { style: { position: "relative" } },
+    user.avatar
+      ? e("img", { src: user.avatar, style: { width: 36, height: 36, borderRadius: "50%", cursor: "pointer", border: "2px solid var(--acc)" }, onClick: () => setOpen(!open) })
+      : e("div", { className: "profile-avatar", onClick: () => setOpen(!open) }, initials),
+    open && e(React.Fragment, null,
+      e("div", { style: { position: "fixed", inset: 0, zIndex: 999 }, onClick: () => setOpen(false) }),
+      e("div", { className: "profile-menu" },
+        e("div", { style: { padding: "8px 11px 10px", borderBottom: "1px solid var(--bdr)" } },
+          e("div", { style: { fontWeight: 700, fontSize: "13px" } }, user.name || "User"),
+          e("div", { style: { fontSize: "11px", color: "var(--tx2)", marginTop: "2px" } }, user.email),
+          user.location && e("div", { style: { fontSize: "11px", color: "var(--acc)", marginTop: "2px" } },
+            "📍 ", user.location.area || user.location.state
+          ),
+          user.role === "govt" && e("div", { style: { fontSize: "11px", color: "var(--acc2)", marginTop: "3px", fontWeight: 600 } },
+            "🏛️ ", user.dept
+          )
+        ),
+        e("button", { className: "profile-menu-item", style: { color: "var(--dan)" }, onClick: () => { setOpen(false); onSignOut(); } }, "🚪", " Sign Out")
+      )
+    )
+  );
+}
+
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  React.createElement(ErrorBoundary,null,React.createElement(App))
+);
+</script>
+</body>
+</html>
