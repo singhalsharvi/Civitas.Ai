@@ -623,8 +623,8 @@ async function fbUpdate(id,fields){
 }
 
 // ── GEMINI ────────────────────────────────────────────────────
-async function runGemini(b64,userCat,desc,apiKey){
-  if(!apiKey||!b64){
+async function runGemini(b64,userCat,desc){
+  if(!b64){
     await new Promise(r=>setTimeout(r,1200));
     const c=CMAP[userCat]||CATS[0];
     return{category:userCat,severity:"HIGH",dept:c.dept,score:91,eta:"5–8 days",
@@ -649,13 +649,12 @@ What you see in image → category:
 HIGH=immediate safety risk, MEDIUM=significant inconvenience, LOW=minor
 Return ONLY JSON: {"category":"<id>","severity":"HIGH|MEDIUM|LOW","dept":"<dept>","score":<0-100>,"eta":"<days>","desc":"<2 sentences>","tags":["t1","t2","t3"]}`;
   try{
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+    const r=await fetch("/api/gemini",
       {method:"POST",headers:{"Content-Type":"application/json"},
-       body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:"image/jpeg",data:b64}},{text:prompt}]}],
-       generationConfig:{temperature:0.05,topP:0.8}})});
+       body:JSON.stringify({type:"analyze",b64,mimeType:"image/jpeg",prompt})});
     const d=await r.json();
-    if(d.error)throw new Error(d.error.message);
-    const raw=d?.candidates?.[0]?.content?.parts?.[0]?.text||"{}";
+    if(d.error)throw new Error(d.error);
+    const raw=d.text||"{}";
     const p=JSON.parse(raw.replace(/```json|```/g,"").trim());
     if(!p.dept)p.dept=CMAP[p.category]?.dept||"Municipal Corporation";
     p.raw=raw; return p;
@@ -666,7 +665,7 @@ Return ONLY JSON: {"category":"<id>","severity":"HIGH|MEDIUM|LOW","dept":"<dept>
 }
 
 // ── CHATBOT LOGIC (Gemini-powered) ───────────────────────────
-async function chatWithGemini(userMsg, issues, userState, apiKey){
+async function chatWithGemini(userMsg, issues, userState){
   const areaIssues = issues.filter(i=>!userState||i.state===userState.state);
   const summary = areaIssues.slice(0,10).map(i=>`[${i.severity}] ${i.title} (${i.status}, ${i.votes} votes, ${i.location})`).join('\n');
   const context = `You are CivitasBot, a helpful AI assistant for the Civitas.Ai platform — a civic issue reporting app for Indian cities.
@@ -682,25 +681,13 @@ You help citizens:
 - Give civic advice
 
 Be concise, friendly, and helpful. Use emojis naturally. If asked about specific issues, reference the data above.`;
-  if(!apiKey){
-    await new Promise(r=>setTimeout(r,600));
-    const msg=userMsg.toLowerCase();
-    if(msg.includes("report")||msg.includes("how"))return"To report an issue: tap **+ Report** button → pick category → select your location → upload photos → Gemini AI analyzes it automatically! 📸";
-    if(msg.includes("status")||msg.includes("issue"))return`There are **${areaIssues.length}** issues in your area. ${areaIssues.filter(i=>i.status==="open").length} open, ${areaIssues.filter(i=>i.status==="resolved").length} resolved. 📊`;
-    if(msg.includes("pothole")||msg.includes("road"))return"Road issues are handled by the **Roads Department**. After reporting, they typically respond within 5-8 days. High-vote issues get priority! 🚧";
-    if(msg.includes("water")||msg.includes("pipe"))return"Water leaks are handled by the **Water Supply Board**. These are HIGH priority — usually addressed within 24-48 hours if reported correctly. 💧";
-    if(msg.includes("garbage")||msg.includes("trash"))return"Garbage issues go to **Municipal Sanitation**. Tip: if 3+ people report the same area, it gets escalated automatically! 🗑️";
-    if(msg.includes("hello")||msg.includes("hi")||msg.includes("hey"))return"Hey there! 👋 I'm CivitasBot. I can help you report issues, check status of problems in your area, or answer questions about Civitas.Ai. What's on your mind?";
-    return"I'm here to help! You can ask me about how to report issues, check what's happening in your area, or get info on any civic problem. What would you like to know? 🏙️";
-  }
   try{
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+    const r=await fetch("/api/gemini",
       {method:"POST",headers:{"Content-Type":"application/json"},
-       body:JSON.stringify({contents:[{parts:[{text:context+"\n\nUser: "+userMsg+"\nCivitasBot:"}]}],
-       generationConfig:{temperature:0.7,maxOutputTokens:200}})});
+       body:JSON.stringify({type:"chat",prompt:context+"\n\nUser: "+userMsg+"\nCivitasBot:"})});
     const d=await r.json();
-    if(d.error)throw new Error(d.error.message);
-    return d?.candidates?.[0]?.content?.parts?.[0]?.text||"Sorry, I couldn't process that. Try again!";
+    if(d.error)throw new Error(d.error);
+    return d.text||"Sorry, I couldn't process that. Try again!";
   }catch(e){return"I'm having trouble connecting right now. Try again in a moment! 🔄";}
 }
 
@@ -727,7 +714,7 @@ function useTheme(){
 }
 
 // ── CHATBOT COMPONENT ─────────────────────────────────────────
-function ChatBot({issues,userState,apiKey}){
+function ChatBot({issues,userState}){
   const [open,setOpen]=useState(false);
   const [msgs,setMsgs]=useState([{role:"bot",text:"Hey! 👋 I'm **CivitasBot**. Ask me anything about issues in your area, how to report problems, or what's happening near you!"}]);
   const [input,setInput]=useState("");
@@ -750,7 +737,7 @@ function ChatBot({issues,userState,apiKey}){
     setInput(""); setHasNew(false);
     setMsgs(m=>[...m,{role:"user",text:msg}]);
     setTyping(true);
-    const reply=await chatWithGemini(msg,issues,userState,apiKey);
+    const reply=await chatWithGemini(msg,issues,userState);
     setTyping(false);
     setMsgs(m=>[...m,{role:"bot",text:reply}]);
   }
@@ -1128,7 +1115,7 @@ function ICard({issue,onVote,voted,isGovt=false,onStatusChange,onAddResponse}){
 }
 
 // ── REPORT MODAL ──────────────────────────────────────────────
-function ReportModal({onClose,onSubmit,onUpvote,allIssues,apiKey,defaultState,defaultDistrict,defaultArea}){
+function ReportModal({onClose,onSubmit,onUpvote,allIssues,defaultState,defaultDistrict,defaultArea}){
   const e=React.createElement;
   const [step,setStep]=useState(1);
   const [cat,setCat]=useState(null);
@@ -1150,7 +1137,7 @@ function ReportModal({onClose,onSubmit,onUpvote,allIssues,apiKey,defaultState,de
 
   async function analyze(){
     setStep(4);setBusy(true);
-    const result=await runGemini(b64s[0],cat,desc,apiKey);
+    const result=await runGemini(b64s[0],cat,desc);
     setAi(result);setBusy(false);
   }
 
@@ -1676,21 +1663,17 @@ function Landing({onCitizen,onGovt,theme,toggleTheme}){
 }
 
 // ── SETTINGS ──────────────────────────────────────────────────
-function SettingsPage({apiKey,setApiKey,fbCfg,setFbCfg,fbOk,onConnectFB,onClearData}){
+function SettingsPage({fbCfg,setFbCfg,fbOk,onConnectFB,onClearData}){
   const e=React.createElement;
-  const [gk,setGk]=useState(apiKey);
   const [fb,setFb]=useState(fbCfg);
-  const [sg,setSg]=useState(false);
   const [sf,setSf]=useState(false);
   const FBKEYS=["apiKey","authDomain","projectId","storageBucket","messagingSenderId","appId"];
   return e("div",{style:{maxWidth:540}},
     e("div",{className:"ptitle"},"⚙️ Settings"),
-    e("div",{className:"psub"},"Connect AI and database for a fully live demo"),
+    e("div",{className:"psub"},"Connect database for a fully live demo"),
     e("div",{className:"cfgsec"},
-      e("div",{className:"cfgtitle"},"🤖 Google AI Studio — Gemini API",e("div",{className:"gbadge",style:{marginLeft:"auto"}},e("div",{className:"gbadge-dot"}),"Core AI Tool")),
-      e("div",{className:"cfgsub"},"1. Go to makersuite.google.com → Get API key (free)\n2. Paste below — stays in your browser\n3. Without key: realistic mock AI responses shown"),
-      e("div",{className:"fg"},e("label",{className:"fl"},"Gemini API Key"),e("input",{className:"fi",type:"password",placeholder:"AIzaSy...",value:gk,onChange:ev=>{setGk(ev.target.value);setSg(false)}})),
-      e("button",{className:"btn btn-p",onClick:()=>{setApiKey(gk);setSg(true);}},sg?"✅ Saved":"Save Key")
+      e("div",{className:"cfgtitle"},"🤖 Gemini AI",e("div",{className:"gbadge",style:{marginLeft:"auto"}},e("div",{className:"gbadge-dot"}),"Secured ✅")),
+      e("div",{className:"cfgsub"},"Gemini API is handled securely server-side. Your API key is never exposed in the browser.")
     ),
     e("div",{className:"cfgsec"},
       e("div",{className:"cfgtitle"},"🔥 Firebase",e("span",{style:{fontSize:"11px",fontWeight:600,color:fbOk?"var(--ok)":"var(--dan)",marginLeft:"auto"}},fbOk?"● Connected":"● Not Connected")),
@@ -1731,7 +1714,7 @@ function App(){
   const [tab,setTab]=useState(()=>{const u=getLocalUser();return(u&&u.role==="govt")?"queue":"home";});
   const [voted,setVoted]=useState(()=>{try{return JSON.parse(localStorage.getItem("civitas_voted_v1")||"{}");}catch(e){return{};}});
   const [modal,setModal]=useState(false);
-  const [apiKey] = useState(GEMINI_API_KEY);
+  
   const [fbCfg] = useState(FIREBASE_CONFIG);
   const [fbOk,setFbOk]=useState(false);
   const {ts,add:toast}=useToast();
@@ -1988,11 +1971,11 @@ function App(){
     ),
 
     modal&&e(ReportModal,{
-      onClose:()=>setModal(false),onSubmit:submit,onUpvote:vote,allIssues:issues,apiKey,
+      onClose:()=>setModal(false),onSubmit:submit,onUpvote:vote,allIssues:issues,
       defaultState:userState?.state,defaultDistrict:userState?.district,defaultArea:userState?.area
     }),
 
-    e(ChatBot,{issues:myIssues,userState,apiKey}),
+    e(ChatBot,{issues:myIssues,userState}),
     e(Toaster,{ts})
   );
 }
@@ -2112,11 +2095,11 @@ function detectLocation() {
 }
 
 // ── Gemini ID scanning ─────────────────────────────────────
-async function scanGovtID(b64, apiKey) {
-  if (!apiKey) {
+async function scanGovtID(b64) {
+  if (!b64) {
     await new Promise(r => setTimeout(r, 1500));
     return { dept: null, name: null, empId: null, confidence: 0,
-      raw: "Demo mode — add Gemini API key in Settings to enable live ID scanning" };
+      raw: "Demo mode — AI ID scanning active via secure backend" };
   }
   const prompt = `You are analyzing a government employee ID card / official document from India.
 Extract the following information if visible:
@@ -2139,15 +2122,12 @@ Map the department to one of these categories:
 Return ONLY valid JSON (no markdown):
 {"name":"<employee name or null>","empId":"<ID number or null>","dept":"<mapped department category>","confidence":<0-100>,"notes":"<brief note about what you detected>"}`;
   try {
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+    const r = await fetch("/api/gemini",
       { method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: [{ parts: [
-          { inline_data: { mime_type: "image/jpeg", data: b64 } },
-          { text: prompt }
-        ]}], generationConfig: { temperature: 0.1 } }) });
+        body: JSON.stringify({ type: "scan", b64, mimeType: "image/jpeg", prompt }) });
     const d = await r.json();
-    if (d.error) throw new Error(d.error.message);
-    const raw = d?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+    if (d.error) throw new Error(d.error);
+    const raw = d.text || "{}";
     return JSON.parse(raw.replace(/```json|```/g, "").trim());
   } catch(e) {
     return { dept: null, name: null, empId: null, confidence: 0, raw: e.message };
@@ -2663,8 +2643,7 @@ const FIREBASE_CONFIG = {
   appId: "1:392361442981:web:265aab985682872f4a574c"
 };
 
-// ── GEMINI API KEY ────────────────────────────────────────────
-const GEMINI_API_KEY = "AIzaSyBf9THIypirKcPGP1xo2INntgPYzRmp_Lc";
+
 
 // Auto-initialize Firebase with pre-configured config
 window._firebaseInitPromise = (async function autoInitFirebase() {
@@ -2702,7 +2681,7 @@ function GovtRegister({ onDone, onSwitchLogin }) {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [drag, setDrag] = useState(false);
-  const apiKey = GEMINI_API_KEY;
+  
 
   function handleIdFile(file) {
     if (!file) return;
@@ -2712,7 +2691,7 @@ function GovtRegister({ onDone, onSwitchLogin }) {
       const b64 = ev.target.result.split(",")[1];
       setIdB64(b64);
       setScanning(true); setScanResult(null);
-      const result = await scanGovtID(b64, apiKey);
+      const result = await scanGovtID(b64);
       setScanResult(result);
       if (result.dept) setDept(result.dept);
       if (result.name && !name) setName(result.name);
